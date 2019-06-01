@@ -41,6 +41,8 @@ sp1_1 = sqrt(1-x^2);
 sp1_2 = sqrt(3)*x*sqrt(1-x^2); 
 old = [0 0 sp0_2 sp0_3];
 now = [sp1_1 sp1_2 0 0];
+now(3) = legendre_recursion('sch','degree',x,now(1),now(2),2,1);	
+now(4) = legendre_recursion('sch','degree',x,now(2),now(3),3,1);
 new = zeros(1,4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -52,6 +54,8 @@ sp1_1_prime = sqrt(1-x_prime^2);
 sp1_2_prime = sqrt(3)*x_prime*sqrt(1-x_prime^2); 
 old_prime = [0 0 sp0_2_prime sp0_3_prime];
 now_prime = [sp1_1_prime sp1_2_prime 0 0];
+now_prime(3) = legendre_recursion('sch','degree',x,now_prime(1),now_prime(2),2,1);	
+now_prime(4) = legendre_recursion('sch','degree',x,now_prime(2),now_prime(3),3,1);
 new_prime = zeros(1,4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -91,21 +95,21 @@ for M = MM
 	kj = k0*sqrt(e(jj)*u(jj));
 
 	while (m<M)
-		now(3) = legendre_recursion('sch','degree',x,now(1),now(2),m+1,m);	
-		now(4) = legendre_recursion('sch','degree',x,now(2),now(3),m+2,m);
 		new(1) = legendre_recursion('sch','order',x,old(3),now(2),m+1,m);
 		new(2) = legendre_recursion('sch','order',x,old(4),now(3),m+2,m);
-		old = now;
-		now = new;
+		new(3) = legendre_recursion('sch','degree',x,new(1),new(2),m+2,m+1);	
+		new(4) = legendre_recursion('sch','degree',x,new(2),new(3),m+3,m+1);
 
-		now_prime(3) = legendre_recursion('sch','degree',x,now_prime(1),now_prime(2),m+1,m);	
-		now_prime(4) = legendre_recursion('sch','degree',x,now_prime(2),now_prime(3),m+2,m);
 		new_prime(1) = legendre_recursion('sch','order',x,old_prime(3),now_prime(2),m+1,m);
 		new_prime(2) = legendre_recursion('sch','order',x,old_prime(4),now_prime(3),m+2,m);
-		old_prime = now_prime;
-		now_prime = new_prime;
+		new_prime(3) = legendre_recursion('sch','degree',x,new_prime(1),new_prime(2),m+2,m+1);	
+		new_prime(4) = legendre_recursion('sch','degree',x,new_prime(2),new_prime(3),m+3,m+1);
 
 		m = m+1;
+		old = now;
+		now = new;
+		old_prime = now_prime;
+		now_prime = new_prime;
 	endwhile
 
 	switch cal
@@ -138,24 +142,12 @@ for M = MM
 
 			field_value(M) = field_value(M) + delta;
 			if ( abs( delta/field_value(M) )<1e-4 && abs( delta_old/field_value(M) )<1e-4 )
-				printf('TM: converged after %d iterations. \n', n-M+1);
+				printf('TE: converged after %d iterations. \n', n-M+1);
 				break
 			else
 				n = n+1; 
 				delta_old = delta ;
 			endif
-%			P0 = legendre(n-1,0);
-%			A = -factorial(n-M)/factorial(n+M-1) * (2*n+1)/n/(n+1) * P0(M+1); 
-%			H_r(M) = H_r(M) + A*F*P(M,n)*n*(n+1)/(1i*w*u(ii)*u0*r);
-%			if n>M+3 && abs( (old_H_r-H_r(M))/H_r(M) )<1e-2 && abs( (old_old_H_r-old_H_r)/old_H_r )<1e-2
-%				printf('TE: converged after %d iterations. \n', n-M);
-%				stop = 1;
-%			elseif n > n_truc-2
-%				printf('TE: diverge! n_truc is reached.\n');
-%				stop = 1;
-%			else
-%				n = n+2; % n = n+1 will give P_n^{M+1}(0) = 0, thus no update;
-%			endif
 		until (0)
 		field_value(M) = field_value(M) * ( 1i*v*kj*u(jj) ) / ( 4*pi*r*u(ii) ) * exp(1i*M*phi); 
 
@@ -163,19 +155,16 @@ for M = MM
 
 		delta_old = 0;
 		n = M;
+		sp_old_old = now(3);
+		sp_old = now(4);
+		sp_prime_old_old = now_prime(3);
+		sp_prime_old = now_prime(4);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
 
-			switch n	
-			case {M}
-				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(1) * now(1);	
-				sp_old_old = now(1);
-				sp_prime_old_old = now_prime(1);
-			case {M+1}
-				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(2) * now(2);	
-				sp_old = now(2);
-				sp_prime_old = now_prime(2);
-			otherwise
+			if n<=M+3	
+				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(n-M+1) * now(n-M+1);	
+			else
 				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch','degree',x,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5) * (F+r_prime*dF_rp) * sp_prime * sp;
@@ -184,7 +173,27 @@ for M = MM
 				sp_old = sp;
 				sp_prime_old_old = sp_prime_old;
 				sp_prime_old = sp_prime;
-			endswitch
+			end
+
+			%switch n	
+			%case {M}
+			%	delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(1) * now(1);	
+			%	sp_old_old = now(1);
+			%	sp_prime_old_old = now_prime(1);
+			%case {M+1}
+			%	delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(2) * now(2);	
+			%	sp_old = now(2);
+			%	sp_prime_old = now_prime(2);
+			%otherwise
+			%	sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
+			%	sp_prime = legendre_recursion('sch','degree',x,sp_prime_old_old,sp_prime_old,n-1,M); 
+			%	delta = (n+0.5) * (F+r_prime*dF_rp) * sp_prime * sp;
+
+			%	sp_old_old = sp_old;
+			%	sp_old = sp;
+			%	sp_prime_old_old = sp_prime_old;
+			%	sp_prime_old = sp_prime;
+			%endswitch
 
 			field_value(M) = field_value(M) + delta;
 			if ( abs( delta/field_value(M) )<1e-4 && abs( delta_old/field_value(M) )<1e-4 )
