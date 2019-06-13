@@ -25,7 +25,7 @@ theta = pi/2-pi/1000;
 phi = 0;
 v = 3; % linear velocity of the charge.
 M_truc = 1+3e3; % the truncation frequency = M_truc * Omeg.
-cal = 6; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
+cal = 4; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 idx = find(a>r);
@@ -219,7 +219,7 @@ for M = MM
 		until (0)
 		field_value(M) = field_value(M) * 1i*M/sin(theta) * w/(4*pi)*kj * exp(1i*M*phi); 
 
-		field_value_1 = zeros(M_truc, 1);
+		field_value_1 = 0;
 		delta_old = 0;
 		n = M+1;
 		sp_old_old = now(3);
@@ -244,8 +244,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1(M) = field_value_1(M) + delta;
-			if ( abs( delta/field_value_1(M) )<1e-4 && abs( delta_old/field_value_1(M) )<1e-4 )
+			field_value_1 = field_value_1 + delta;
+			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
 				printf('H_theta_term2: converged after %d iterations. \n', n-M+2);
 				break
 			else
@@ -254,7 +254,7 @@ for M = MM
 			endif
 		until (0)
 		field_value(M) = field_value(M) + ...
-				 field_value_1(M) * ( 1i*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
+				 field_value_1 * ( 1i*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
 
 	case {4} % calculate E_theta
 
@@ -291,7 +291,7 @@ for M = MM
 		until (0)
 		field_value(M) = field_value(M) * 1i*M / sin(theta)  * w*v*u(jj)*u0*kj/(4*pi) * exp(1i*M*phi) ;
 
-		field_value_1 = zeros(M_truc, 1);
+		field_value_1 = 0;
 		delta_old = 0;
 		n = M;
 		sp_old_old = now(3);
@@ -322,8 +322,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1(M) = field_value_1(M) + delta;
-			if ( abs( delta/field_value_1(M) )<1e-4 && abs( delta_old/field_value_1(M) )<1e-4 )
+			field_value_1 = field_value_1 + delta;
+			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
 				printf('E_theta_term2: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -332,7 +332,7 @@ for M = MM
 			endif
 		until (0)
 		field_value(M) = field_value(M) + ...
-				 field_value_1(M) * 1i*kj / ( 4*pi*r*e(ii)*e0*sin(theta) ) * exp(1i*M*phi); 
+				 field_value_1 * 1i*kj / ( 4*pi*r*e(ii)*e0*sin(theta) ) * exp(1i*M*phi); 
 
 	case {5} % calculate H_phi
 
@@ -365,7 +365,7 @@ for M = MM
 			end
 
 			field_value(M) = field_value(M) + delta;
-			if ( abs( delta/field_value_1(M) )<1e-4 && abs( delta_old/field_value_1(M) )<1e-4 )
+			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
 				printf('H_phi_term1: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -375,7 +375,7 @@ for M = MM
 		until (0)
 		field_value(M) = field_value(M) * -w / ( 4*pi*kj*sin(theta) ) * exp(1i*M*phi); 
 
-		field_value_1 = zeros(M_truc, 1);
+		field_value_1 = 0;
 		delta_old = 0;
 		n = M+1;
 		sp_old_old = now(3);
@@ -398,8 +398,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1(M) = field_value_1(M) + delta;
-			if ( abs( delta/field_value_1(M) )<1e-4 && abs( delta_old/field_value_1(M) )<1e-4 )
+			field_value_1 = field_value_1 + delta;
+			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
 				printf('H_phi_term2: converged after %d iterations. \n', n-M+2);
 				break
 			else
@@ -408,7 +408,7 @@ for M = MM
 			endif
 		until (0)
 		field_value(M) = field_value(M) - ...
-				 field_value_1(M) * ( M*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
+				 field_value_1 * ( M*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
 
 	case {6} % calculate E_phi
 
@@ -447,7 +447,7 @@ for M = MM
 		until (0)
 		field_value(M) = field_value(M) * ( w*v*u(jj)*u0*kj ) / ( 4*pi*sin(theta) ) * exp(1i*M*phi); 
 
-		field_value_1 = zeros(M_truc, 1);
+		field_value_1 = 0;
 		delta_old = 0;
 		n = M;
 		sp_old_old = now(3);
@@ -472,8 +472,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1(M) = field_value_1(M) + delta;
-			if ( abs( delta/field_value_1(M) )<1e-4 && abs( delta_old/field_value_1(M) )<1e-4 )
+			field_value_1 = field_value_1 + delta;
+			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
 				printf('E_phi_term2: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -482,7 +482,7 @@ for M = MM
 			endif
 		until (0)
 		field_value(M) = field_value(M) - ...
-				 field_value_1(M) * ( M*kj ) / ( 4*pi*e(ii)*e0*r*sin(theta) ) * exp(1i*M*phi); 
+				 field_value_1 * ( M*kj ) / ( 4*pi*e(ii)*e0*r*sin(theta) ) * exp(1i*M*phi); 
 
 	endswitch
 
