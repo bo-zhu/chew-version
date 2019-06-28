@@ -9,7 +9,7 @@ function [E_r E_theta U] = circle_charge(r1,r2,r,theta,r_prime,precision)
 % r1 : radius of the inner shell.
 % r2 : radius of the outer shell.
 % r : observation distance.
-% theta, phi : observation angle.
+% theta : observation angle.
 % r_prime : source distance.
 % precision : relative error of two iterations.
 
