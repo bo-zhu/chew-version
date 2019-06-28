@@ -26,6 +26,7 @@ phi = 0;
 v = 3; % linear velocity of the charge.
 M_truc = 1+3e3; % the truncation frequency = M_truc * Omeg.
 cal = 4; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
+precision = 1e-5;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 idx = find(a>r);
@@ -47,8 +48,7 @@ new = zeros(1,4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%% initial sp(x_prime) %%%%%%%%
-%x_prime = cos(theta_prime);
-x_prime = 0
+x_prime = cos(theta_prime);
 sp0_2_prime =(3*x_prime^2-1)/sqrt(2);
 sp0_3_prime = x_prime*(5*x_prime^2-3)/sqrt(2);
 sp1_1_prime = sqrt(1-x_prime^2);
@@ -65,6 +65,7 @@ T = 2*pi/Omeg;
 m = 1;
 MM = 1:50:M_truc;
 field_value = zeros(M_truc, 1);
+field_value_1 = zeros(M_truc, 1);
 
 for M = MM 
 	w = M*Omeg;
@@ -139,7 +140,7 @@ for M = MM
 			end
 
 			field_value(M) = field_value(M) + delta;
-			if ( abs( delta/field_value(M) )<1e-4 && abs( delta_old/field_value(M) )<1e-4 )
+			if ( abs( delta/field_value(M) )<precision && abs( delta_old/field_value(M) )<precision )
 				printf('H_r: converged after %d iterations. \n', n-M);
 				break
 			else
@@ -174,7 +175,7 @@ for M = MM
 			end
 
 			field_value(M) = field_value(M) + delta;
-			if ( abs( delta/field_value(M) )<1e-4 && abs( delta_old/field_value(M) )<1e-4 )
+			if ( abs( delta/field_value(M) )<precision && abs( delta_old/field_value(M) )<precision )
 				printf('E_r: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -209,7 +210,7 @@ for M = MM
 			end
 
 			field_value(M) = field_value(M) + delta;
-			if ( abs( delta/field_value(M) )<1e-4 && abs( delta_old/field_value(M) )<1e-4 )
+			if ( abs( delta/field_value(M) )<precision && abs( delta_old/field_value(M) )<precision )
 				printf('H_theta_term1: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -219,7 +220,6 @@ for M = MM
 		until (0)
 		field_value(M) = field_value(M) * 1i*M/sin(theta) * w/(4*pi)*kj * exp(1i*M*phi); 
 
-		field_value_1 = 0;
 		delta_old = 0;
 		n = M+1;
 		sp_old_old = now(3);
@@ -230,12 +230,12 @@ for M = MM
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
 			if n<=M+3	
-				C_nM = n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M);
+				C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * now_prime(n-M) * C_nM;	
 			else
 				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				C_nM = n*x*sp - sqrt(n^2-M^2)*sp_old;
+				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * sp_prime_old * C_nM;	
 
 				sp_old_old = sp_old;
@@ -244,8 +244,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1 = field_value_1 + delta;
-			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
+			field_value_1(M) = field_value_1(M) + delta;
+			if ( abs( delta/field_value_1(M) )<precision && abs( delta_old/field_value_1(M) )<precision )
 				printf('H_theta_term2: converged after %d iterations. \n', n-M+2);
 				break
 			else
@@ -253,8 +253,9 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) + ...
-				 field_value_1 * ( 1i*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
+		
+		field_value_1(M) = field_value_1(M) * ( 1i*v*kj ) / ( 4*pi*r ) * u(jj)/u(ii) * exp(1i*M*phi); 
+		field_value(M) = field_value(M) + field_value_1(M);
 
 	case {4} % calculate E_theta
 
@@ -281,7 +282,7 @@ for M = MM
 			end
 
 			field_value(M) = field_value(M) + delta;
-			if ( abs( delta/field_value(M) )<1e-4 && abs( delta_old/field_value(M) )<1e-4 )
+			if ( abs( delta/field_value(M) )<precision && abs( delta_old/field_value(M) )<precision )
 				printf('E_theta_term1: converged after %d iterations. \n', n-M+2);
 				break
 			else
@@ -291,7 +292,6 @@ for M = MM
 		until (0)
 		field_value(M) = field_value(M) * 1i*M / sin(theta)  * w*v*u(jj)*u0*kj/(4*pi) * exp(1i*M*phi) ;
 
-		field_value_1 = 0;
 		delta_old = 0;
 		n = M;
 		sp_old_old = now(3);
@@ -303,17 +303,17 @@ for M = MM
 
 			if n<=M+3	
 				if n == M
-					C_nM = n*x*now(n-M+1);	
+					C_nM = ( n*x*now(n-M+1) ) / sin(theta);	
 				else
-					C_nM = n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M);
+					C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
 				end
-				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*dF_r*r_prime*dF_rp) *...
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) *...
 					now_prime(n-M+1) * C_nM	;
 			else
 				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				C_nM = n*x*sp - sqrt(n^2-M^2)*sp_old;
-				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*dF_r*r_prime*dF_rp) *...
+				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) *...
 					sp_prime * C_nM	;
 
 				sp_old_old = sp_old;
@@ -322,8 +322,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1 = field_value_1 + delta;
-			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
+			field_value_1(M) = field_value_1(M) + delta;
+			if ( abs( delta/field_value_1(M) )<precision && abs( delta_old/field_value_1(M) )<precision )
 				printf('E_theta_term2: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -331,8 +331,8 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) + ...
-				 field_value_1 * 1i*kj / ( 4*pi*r*e(ii)*e0*sin(theta) ) * exp(1i*M*phi); 
+		field_value_1(M) = field_value_1(M) * 1i*kj / ( 4*pi*r*e(ii)*e0 ) * exp(1i*M*phi); 
+		field_value(M) = field_value(M) + field_value_1(M); 
 
 	case {5} % calculate H_phi
 
@@ -347,15 +347,15 @@ for M = MM
 
 			if n<=M+3	
 				if n == M
-					C_nM = n*x*now(n-M+1);	
+					C_nM = n*x*now(n-M+1) / sin(theta);	
 				else
-					C_nM = n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M);
+					C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
 				end
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(n-M+1) * C_nM;	
 			else
 				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				C_nM = n*x*sp - sqrt(n^2-M^2)*sp_old;
+				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp)* sp_prime * C_nM;	
 
 				sp_old_old = sp_old;
@@ -365,7 +365,7 @@ for M = MM
 			end
 
 			field_value(M) = field_value(M) + delta;
-			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
+			if ( abs( delta/field_value(M) )<precision && abs( delta_old/field_value )<precision )
 				printf('H_phi_term1: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -373,9 +373,8 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) * -w / ( 4*pi*kj*sin(theta) ) * exp(1i*M*phi); 
+		field_value(M) = -field_value(M) * w / ( 4*pi*kj ) * exp(1i*M*phi); 
 
-		field_value_1 = 0;
 		delta_old = 0;
 		n = M+1;
 		sp_old_old = now(3);
@@ -398,8 +397,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1 = field_value_1 + delta;
-			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
+			field_value_1(M) = field_value_1(M) + delta;
+			if ( abs( delta/field_value_1(M) )<precision && abs( delta_old/field_value_1(M) )<precision )
 				printf('H_phi_term2: converged after %d iterations. \n', n-M+2);
 				break
 			else
@@ -407,8 +406,8 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) - ...
-				 field_value_1 * ( M*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
+		field_value_1(M) = field_value_1(M) * ( M*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
+		field_value(M) = field_value(M) - field_value_1(M);
 
 	case {6} % calculate E_phi
 
@@ -422,12 +421,12 @@ for M = MM
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
 			if n<=M+3	
-				C_nM = n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M);
+				C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * now_prime(n-M) * C_nM;	
 			else
 				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				C_nM = n*x*sp - sqrt(n^2-M^2)*sp_old;
+				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta) ;
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * sp_prime_old * C_nM;	
 
 				sp_old_old = sp_old;
@@ -437,7 +436,7 @@ for M = MM
 			end
 
 			field_value(M) = field_value(M) + delta;
-			if ( abs( delta/field_value(M) )<1e-4 && abs( delta_old/field_value(M) )<1e-4 )
+			if ( abs( delta/field_value(M) )<precision && abs( delta_old/field_value(M) )<precision )
 				printf('E_phi_term1: converged after %d iterations. \n', n-M+2);
 				break
 			else
@@ -445,9 +444,8 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) * ( w*v*u(jj)*u0*kj ) / ( 4*pi*sin(theta) ) * exp(1i*M*phi); 
+		field_value(M) = field_value(M) * ( w*v*u(jj)*u0*kj ) / ( 4*pi ) * exp(1i*M*phi); 
 
-		field_value_1 = 0;
 		delta_old = 0;
 		n = M;
 		sp_old_old = now(3);
@@ -458,12 +456,12 @@ for M = MM
 			[F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
 
 			if n<=M+3	
-				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*dF_r*r_prime*dF_rp) *...
+				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*r_prime*d2F) *...
 					 now_prime(n-M+1) * now(n-M+1);	
 			else
 				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch','degree',x,sp_prime_old_old,sp_prime_old,n-1,M); 
-				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*dF_r*r_prime*dF_rp) *...
+				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*r_prime*d2F) *...
 					 sp_prime * sp;	
 
 				sp_old_old = sp_old;
@@ -472,8 +470,8 @@ for M = MM
 				sp_prime_old = sp_prime;
 			end
 
-			field_value_1 = field_value_1 + delta;
-			if ( abs( delta/field_value_1 )<1e-4 && abs( delta_old/field_value_1 )<1e-4 )
+			field_value_1(M) = field_value_1(M) + delta;
+			if ( abs( delta/field_value_1(M) )<precision && abs( delta_old/field_value_1(M) )<precision )
 				printf('E_phi_term2: converged after %d iterations. \n', n-M+1);
 				break
 			else
@@ -481,8 +479,8 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) - ...
-				 field_value_1 * ( M*kj ) / ( 4*pi*e(ii)*e0*r*sin(theta) ) * exp(1i*M*phi); 
+		field_value_1(M) = field_value_1(M) * ( M*kj ) / ( 4*pi*e(ii)*e0*r*sin(theta) ) * exp(1i*M*phi); 
+		field_value_1(M) = field_value(M) - field_value_1(M); 
 
 	endswitch
 

@@ -26,10 +26,22 @@ end
 
 %%%%%%%%%%%%%%%%%%%% initialize %%%%%%%%%%%%%%%%
 e0 = 8.854e-12;
-U = 0;
-E_r = 0;
-E_theta = 0;
 l = 0;
+
+U = 0;
+old_U = 0;
+U_converge = 0;
+U_zero = 0;
+
+E_r = 0;
+old_E_r = 0;
+E_r_converge = 0;
+E_r_zero = 0;
+
+E_theta = 0;
+old_E_theta = 0;
+E_theta_converge = 0;
+E_theta_zero = 0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 old_U = 0;
@@ -78,26 +90,124 @@ do
 	b1 = (l+0.5)/(l+1)*p0_0/(2*pi*e0*b2);
 
 	% calculate the potential at the observation point (r,theta)
-	if r<r_prime
+	switch r<r_prime
+        case 1
 		SUM = b1*(-(r/r1)^l/r1*(r_prime/r1)^l + (r_prime/r)^l/r); 
-		U = U + SUM * p0_x;		
-		E_r = E_r - ( l*-b1/(r1*r)*(r/r1)^l*(r_prime/r1)^l - (l+1)*b1/r^2*(r_prime/r)^l )*p0_x;
-		if l>0
+		
+		if U_converge == 0
+			old_old_U = old_U;
+			old_U = U;
+			U = U + SUM * p0_x;		
+			if (l>3 && abs( (old_U-U)/U )<precision && abs( (old_old_U-old_U)/old_U )<precision )
+				U_converge = 1;
+				printf(' U is converged after %u iterations!\n', l-1);
+			end
+			if (l>3 && U == 0 & old_U == 0)
+				U_zero = U_zero + 1;
+				if U_zero > iter_max
+					U_converge = 1;
+					printf(' U seems to be ZERO.\n ');
+				end
+			end
+		end
+		
+		if E_r_converge == 0
+			old_old_E_r = old_E_r;
+			old_E_r = E_r;
+			E_r = E_r - ( l*-b1/(r1*r)*(r/r1)^l*(r_prime/r1)^l - (l+1)*b1/r^2*(r_prime/r)^l )*p0_x;
+			if (l>3 && abs( (old_E_r-E_r)/E_r )<precision ...
+				&& abs( (old_old_E_r-old_E_r)/old_E_r )<precision )
+				E_r_converge = 1;
+				printf(' E_r is converged after %u iterations!\n', l-1);
+			end
+			if (l>3 && E_r == 0 & old_E_r == 0)
+				E_r_zero = E_r_zero + 1;
+				if E_r_zero > iter_max
+					E_r_converge = 1;
+					printf(' E_r seems to be ZERO. \n');
+				end
+			end
+		end
+
+		if ( l>0 && E_theta_converge == 0 )
+			old_old_E_theta = old_E_theta;
+			old_E_theta = E_theta;
 			E_theta = E_theta + SUM*p1_x;
-		endif
-	else
+			if (l>3 && abs( (old_E_theta-E_theta)/E_theta )<precision ...
+				&& abs( (old_old_E_theta-old_E_theta)/old_E_theta )<precision )
+				E_theta_converge = 1;
+				printf(' E_theta is converged after %u iterations!\n', l-1);
+			end
+			if (l>3 && E_theta == 0 & old_E_theta == 0)
+				E_theta_zero = E_theta_zero + 1;
+				if E_theta_zero > iter_max
+					E_theta_converge = 1;
+					printf(' E_theta seems to be ZERO. \n');
+				end
+			end
+		end
+
+	case 0
 		SUM = (f1-1)/(1-f2)*b1/r2*(r_prime/r2)^l*(r/r2)^l + (1-f1)/(1-f2)*b1/r*(r_prime/r)^l;
-		U = U + SUM * p0_x;		
-		E_r = E_r - ( l*(f1-1)/(1-f2)*b1/(r2*r)*(r_prime/r2)^l*(r/r2)^l - (l+1)*(1-f1)/(1-f2)*b1/r^2*(r_prime/r)^l )*p0_x;
-		if l>0
+		
+		if U_converge == 0
+			old_old_U = old_U;
+			old_U = U;
+			U = U + SUM * p0_x;		
+			if (l>3 && abs( (old_U-U)/U )<precision && abs( (old_old_U-old_U)/old_U )<precision )
+				U_converge = 1;
+				printf(' U is converged after %u iterations!\n', l-1);
+			end
+			if (l>3 && U == 0 & old_U == 0)
+				U_zero = U_zero + 1;
+				if U_zero > iter_max
+					U_converge = 1;
+					printf(' U seems to be ZERO.\n ');
+				end
+			end
+		end
+		
+		if E_r_converge == 0
+			old_old_E_r = old_E_r;
+			old_E_r = E_r;
+			E_r = E_r - ( l*(f1-1)/(1-f2)*b1/(r2*r)*(r_prime/r2)^l*(r/r2)^l - ...
+				      (l+1)*(1-f1)/(1-f2)*b1/r^2*(r_prime/r)^l )*p0_x;
+			if (l>3 && abs( (old_E_r-E_r)/E_r )<precision ...
+				&& abs( (old_old_E_r-old_E_r)/old_E_r )<precision )
+				E_r_converge = 1;
+				printf(' E_r is converged after %u iterations!\n', l-1);
+			end
+			if (l>3 && E_r == 0 & old_E_r == 0)
+				E_r_zero = E_r_zero + 1;
+				if E_r_zero > iter_max
+					E_r_converge = 1;
+					printf(' E_r seems to be ZERO. \n');
+				end
+			end
+		end
+	
+		if ( l>0 && E_theta_converge == 0 )
+			old_old_E_theta = old_E_theta;
+			old_E_theta = E_theta;
 			E_theta = E_theta + SUM*p1_x;
-		endif
-	endif
+			if (l>3 && abs( (old_E_theta-E_theta)/E_theta )<precision ...
+				&& abs( (old_old_E_theta-old_E_theta)/old_E_theta )<precision )
+				E_theta_converge = 1;
+				printf(' E_theta is converged after %u iterations!\n', l-1);
+			end
+			if (l>3 && E_theta == 0 & old_E_theta == 0)
+				E_theta_zero = E_theta_zero + 1;
+				if E_theta_zero > iter_max
+					E_theta_converge = 1;
+					printf(' E_theta seems to be ZERO. \n');
+				end
+			end
+		end
+	end
 	
 	l = l+1;
 
-until (l>3 && abs( (old_U-U)/U )<precision && abs( (old_old_U-old_U)/old_U )<precision )
-printf('Converged after %u iterations!\n', l-1);
+until (U_converge && E_theta_converge && E_r_converge)
 
 % correct U as the inner shell is ungrounded
 B0 = 1/(4*pi*e0)*r1/r_prime*(r2-r_prime)/(r1-r2);
