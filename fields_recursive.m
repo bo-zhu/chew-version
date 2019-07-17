@@ -5,6 +5,26 @@ clear all
 
 addpath('./subroutines');
 
+%%%%%%%%%%%%%%% input parameters %%%%%%%%%%%%%%
+r1 = 0;
+r2 = 60;
+
+%a = ( 6000+[r1 r2 90 150 450] )*1e3; % the radius of each interface of neighboring shells.
+%r_prime = 6010e3;
+%r = 6035e3;
+a = [1 2 3 4 100e3] ; % the radius of each interface of neighboring shells.
+r_prime = 1.5; % the radius of the charge's orbit.
+r = 30e3 ; % r, theta and phi : the observation point. 
+
+theta_prime = pi/2;
+theta = pi/2 - pi/4  ;
+phi = 0;
+v = 3e9; % linear velocity of the charge.
+M_truc = 1+3e3; % the truncation frequency = M_truc * Omeg.
+cal = 6; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
+precision = 1e-5;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%% physical constants %%%%%%%%%%
 u0 = 4*pi*1e-7;
 e0 = 8.854e-12;
@@ -14,71 +34,36 @@ ne_E = 0.5e11;
 ne_D = 1e9;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%% input parameters %%%%%%%%%%%%%%
-r1 = 0;
-r2 = 60;
-a = ( 6000+[r1 r2 90 150 450] )*1e3; % the radius of each interface of neighboring shells.
-r_prime = 6000e3 + 10e3; % the radius of the charge's orbit.
-r = 6000e3 + 35e3; % r, theta and phi : the observation point. 
-theta_prime = pi/2;
-theta = pi/2-pi/1000;
-phi = 0;
-v = 3; % linear velocity of the charge.
-M_truc = 1+3e3; % the truncation frequency = M_truc * Omeg.
-cal = 4; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
-precision = 1e-5;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Omeg = v/r_prime;
+T = 2*pi/Omeg;
+m = 0;
+cof = 1;
+x = cos(theta);
+x_prime = cos(theta_prime);
+field_value = zeros(M_truc, 1);
+field_value_1 = zeros(M_truc, 1);
+now = zeros(1,4);
+now_prime = zeros(1,4);
 
 idx = find(a>r);
 ii = idx(1);
 idx = find(a>r_prime);
 jj = idx(1);
 
-%%%%%%%%%% initial sp(x) %%%%%%%%%%%
-x = cos(theta);
-sp0_2 =(3*x^2-1)/sqrt(2);
-sp0_3 = x*(5*x^2-3)/sqrt(2);
-sp1_1 = sqrt(1-x^2);
-sp1_2 = sqrt(3)*x*sqrt(1-x^2); 
-old = [0 0 sp0_2 sp0_3];
-now = [sp1_1 sp1_2 0 0];
-now(3) = legendre_recursion('sch','degree',x,now(1),now(2),2,1);	
-now(4) = legendre_recursion('sch','degree',x,now(2),now(3),3,1);
-new = zeros(1,4);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%% initial sp(x_prime) %%%%%%%%
-x_prime = cos(theta_prime);
-sp0_2_prime =(3*x_prime^2-1)/sqrt(2);
-sp0_3_prime = x_prime*(5*x_prime^2-3)/sqrt(2);
-sp1_1_prime = sqrt(1-x_prime^2);
-sp1_2_prime = sqrt(3)*x_prime*sqrt(1-x_prime^2); 
-old_prime = [0 0 sp0_2_prime sp0_3_prime];
-now_prime = [sp1_1_prime sp1_2_prime 0 0];
-now_prime(3) = legendre_recursion('sch','degree',x_prime,now_prime(1),now_prime(2),2,1);	
-now_prime(4) = legendre_recursion('sch','degree',x_prime,now_prime(2),now_prime(3),3,1);
-new_prime = zeros(1,4);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Omeg = v/r_prime;
-T = 2*pi/Omeg;
-m = 1;
-MM = 1:50:M_truc;
-field_value = zeros(M_truc, 1);
-field_value_1 = zeros(M_truc, 1);
-
+%MM = 1:100:M_truc;
+MM = 100;
 for M = MM 
 	w = M*Omeg;
 
-	%%%%%%%% media distribution 1 %%%%%%%%%%
-	% the order of the elements in u and e shall be from +z to -z direction 
-	u = [1 1 1 1 1 1]; 
-	e_F = plasma_para(ne_F,w);
-	e_E = plasma_para(ne_E,w);
-	e_D = plasma_para(ne_D,w);
-	e_earth = 1 + 1i*1e9/e0/w;
-	e = [e_earth 1 e_D e_E e_F 1];
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%	%%%%%%%% media distribution 1 %%%%%%%%%%
+%	% the order of the elements in u and e shall be from +z to -z direction 
+%	u = [1 1 1 1 1 1]; 
+%	e_F = plasma_para(ne_F,w);
+%	e_E = plasma_para(ne_E,w);
+%	e_D = plasma_para(ne_D,w);
+%	e_earth = 1 + 1i*1e9/e0/w;
+%	e = [e_earth 1 e_D e_E e_F 1];
+%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %	%%%%%%%% media distribution 2 %%%%%%%%%%
 %	% the order of the elements in u and e shall be from +z to -z direction 
@@ -87,32 +72,29 @@ for M = MM
 %	e = [e_earth 1 1 1 1 1];
 %	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%	%%%%%%%% media distribution 3 %%%%%%%%%%
-%	% the order of the elements in u and e shall be from +z to -z direction 
-%	u = [1 1 1 1 1 1]; 
-%	e = [1 1 1 1 1 1];
-%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%%%%%%%% media distribution 3 %%%%%%%%%%
+	% the order of the elements in u and e shall be from +z to -z direction 
+	u = [1 1 1 1 1 1]; 
+	e = [1 1 1 1 1 1];
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	k0 = w*sqrt(e0*u0);
 	kj = k0*sqrt(e(jj)*u(jj));
+	
+	seq1 = 2*m+1 : 2 : 2*M-1;
+	m = M;
+	seq2 = seq1 + 1;
+	cof = cof * sqrt( prod(seq1./seq2) );
 
-	while (m<M)
-		new(1) = legendre_recursion('sch','order',x,old(3),now(2),m+1,m);
-		new(2) = legendre_recursion('sch','order',x,old(4),now(3),m+2,m);
-		new(3) = legendre_recursion('sch','degree',x,new(1),new(2),m+2,m+1);	
-		new(4) = legendre_recursion('sch','degree',x,new(2),new(3),m+3,m+1);
+	now(1) = sqrt(2) * cof * (1-x^2)^(M/2);
+	now(2) = x * sqrt(2*M+1) * now(1);
+	now(3) = legendre_recursion('sch',x,now(1),now(2),M+1,M);	
+	now(4) = legendre_recursion('sch',x,now(2),now(3),M+2,M);
 
-		new_prime(1) = legendre_recursion('sch','order',x_prime,old_prime(3),now_prime(2),m+1,m);
-		new_prime(2) = legendre_recursion('sch','order',x_prime,old_prime(4),now_prime(3),m+2,m);
-		new_prime(3) = legendre_recursion('sch','degree',x_prime,new_prime(1),new_prime(2),m+2,m+1);	
-		new_prime(4) = legendre_recursion('sch','degree',x_prime,new_prime(2),new_prime(3),m+3,m+1);
-
-		m = m+1;
-		old = now;
-		now = new;
-		old_prime = now_prime;
-		now_prime = new_prime;
-	endwhile
+	now_prime(1) = sqrt(2) * cof * (1-x_prime^2)^(M/2);
+	now_prime(2) = x_prime * sqrt(2*M+1) * now_prime(1);
+	now_prime(3) = legendre_recursion('sch',x_prime,now_prime(1),now_prime(2),M+1,M);	
+	now_prime(4) = legendre_recursion('sch',x_prime,now_prime(2),now_prime(3),M+2,M);
 
 	switch cal
 	case {1} % calculate H_r
@@ -129,8 +111,8 @@ for M = MM
 			if n<=M+3	
 				delta = sqrt(n^2-M^2) * F * now_prime(n-M) * now(n-M+1);	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = sqrt(n^2-M^2) * F * sp_prime_old * sp;
 
 				sp_old_old = sp_old;
@@ -164,8 +146,8 @@ for M = MM
 			if n<=M+3	
 				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(n-M+1) * now(n-M+1);	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5) * (F+r_prime*dF_rp) * sp_prime * sp;
 
 				sp_old_old = sp_old;
@@ -199,8 +181,8 @@ for M = MM
 			if n<=M+3	
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(n-M+1) * now(n-M+1);	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * sp_prime * sp;
 
 				sp_old_old = sp_old;
@@ -233,8 +215,8 @@ for M = MM
 				C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * now_prime(n-M) * C_nM;	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * sp_prime_old * C_nM;	
 
@@ -271,8 +253,8 @@ for M = MM
 			if n<=M+3	
 				delta = -(n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * now_prime(n-M) * now(n-M+1);	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = -(n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * sp_prime_old * sp;
 
 				sp_old_old = sp_old;
@@ -310,8 +292,8 @@ for M = MM
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) *...
 					now_prime(n-M+1) * C_nM	;
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) *...
 					sp_prime * C_nM	;
@@ -353,8 +335,8 @@ for M = MM
 				end
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(n-M+1) * C_nM;	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp)* sp_prime * C_nM;	
 
@@ -373,7 +355,7 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = -field_value(M) * w / ( 4*pi*kj ) * exp(1i*M*phi); 
+		field_value(M) = -field_value(M) * w*kj / ( 4*pi ) * exp(1i*M*phi); 
 
 		delta_old = 0;
 		n = M+1;
@@ -387,8 +369,8 @@ for M = MM
 			if n<=M+3	
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * now_prime(n-M) * now(n-M+1);	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * sp_prime_old * sp;	
 
 				sp_old_old = sp_old;
@@ -424,8 +406,8 @@ for M = MM
 				C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * now_prime(n-M) * C_nM;	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta) ;
 				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * sp_prime_old * C_nM;	
 
@@ -459,8 +441,8 @@ for M = MM
 				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*r_prime*d2F) *...
 					 now_prime(n-M+1) * now(n-M+1);	
 			else
-				sp = legendre_recursion('sch','degree',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch','degree',x,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*r_prime*d2F) *...
 					 sp_prime * sp;	
 
@@ -479,13 +461,13 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value_1(M) = field_value_1(M) * ( M*kj ) / ( 4*pi*e(ii)*e0*r*sin(theta) ) * exp(1i*M*phi); 
-		field_value_1(M) = field_value(M) - field_value_1(M); 
+		field_value_1(M) = field_value_1(M) * M*kj*exp(1i*M*phi) / ( 4*pi*e(ii)*e0*r*sin(theta) ) ; 
+		field_value(M) = field_value(M) - field_value_1(M); 
 
 	endswitch
 
 endfor
-
+keyboard
 
 switch cal
 case {1}
