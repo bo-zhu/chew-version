@@ -63,8 +63,8 @@ do
 		p0_x_old = x;
 		p1_x_older = p1_x;
 	case {2}
-		p0_xp = legendre_recursion('legendre','degree',xp,p0_xp_older,p0_xp_old,l-1,0);
-		p0_x = legendre_recursion('legendre','degree',x,p0_x_older,p0_x_old,l-1,0);
+		p0_xp = legendre_recursion('legendre',xp,p0_xp_older,p0_xp_old,l-1,0);
+		p0_x = legendre_recursion('legendre',x,p0_x_older,p0_x_old,l-1,0);
 		p1_x = -3*x*sqrt(1-x^2);
 		p0_xp_older = p0_xp_old;
 		p0_xp_old = p0_xp;
@@ -72,16 +72,16 @@ do
 		p0_x_old = p0_x;
 		p1_x_old = p1_x;
 	otherwise
-		p0_xp = legendre_recursion('legendre','degree',0,p0_xp_older,p0_xp_old,l-1,0);
-		p0_x = legendre_recursion('legendre','degree',x,p0_x_older,p0_x_old,l-1,0);
-		p1_x = legendre_recursion('legendre','degree',x,p1_x_older,p1_x_old,l-1,1);
+		p0_xp = legendre_recursion('legendre',xp,p0_xp_older,p0_xp_old,l-1,0);
+		p0_x = legendre_recursion('legendre',x,p0_x_older,p0_x_old,l-1,0);
+		p1_x = legendre_recursion('legendre',x,p1_x_older,p1_x_old,l-1,1);
 		p0_xp_older = p0_xp_old;
 		p0_xp_old = p0_xp;
 		p0_x_older = p0_x_old;
 		p0_x_old = p0_x;
 		p1_x_older = p1_x_old;
 		p1_x_old = p1_x;
-	endswitch
+	end
 		
 	f1 = (r_prime/r1)^(2*l+1);
 	f2 = (r_prime/r2)^(2*l+1);
@@ -152,7 +152,6 @@ do
 		if U_converge == 0
 			old_old_U = old_U;
 			old_U = U;
-keyboard
 			U = U + SUM * p0_x;		
 			if (l>3 && abs( (old_U-U)/U )<precision && abs( (old_old_U-old_U)/old_U )<precision )
 				U_converge = 1;
@@ -216,4 +215,4 @@ E_r = E_r - B0/r^2;
 E_theta = E_theta*x/r/sqrt(1-x^2);
 
 
-endfunction
+end
