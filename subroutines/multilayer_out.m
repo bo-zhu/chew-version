@@ -44,6 +44,12 @@ if N>2
 			alpha = ( h_k2a2*j_k2a1 )/( h_k2a1*j_k2a2 ) * exp(1i*k2a2-1i*k2a1+abs(imag(k2a1))-abs(imag(k2a2))); 
 			hn(ii) = h_k2a2/h_k2a1 * exp(1i*k2a2-1i*k2a1);
 		end
+		
+		if isnan(alpha) || isinf(alpha) || isnan(hn(ii)) || isinf(hn(ii))
+			alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
+			hn(ii) = (k2a2/k2a1)^(-ALPHA-1);
+		end
+
 		D = 1-R_21*R_out(ii+1)*alpha;
 		R_out(ii) = R_12 + T_21*T_12*R_out(ii+1)*alpha/D;
 		S(ii) = T_12/D;

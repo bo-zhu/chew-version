@@ -12,6 +12,6 @@ case 'legendre'
 	p3 = ( (2*l+1)*x*p2 - (l+m)*p1 ) / (l-m+1);
 case 'sch'
 	p3 = ( (2*l+1)*x*p2 - sqrt(l^2-m^2)*p1 ) / sqrt( (l+1)^2-m^2 );
-endswitch
+end
 
-endfunction
+end

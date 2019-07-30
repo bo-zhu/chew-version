@@ -9,20 +9,20 @@ addpath('./subroutines');
 r1 = 0;
 r2 = 60;
 
-%a = ( 6000+[r1 r2 90 150 450] )*1e3; % the radius of each interface of neighboring shells.
-%r_prime = 6010e3;
-%r = 6035e3;
-a = [1 2 3 4 100e3] ; % the radius of each interface of neighboring shells.
-r_prime = 1.5; % the radius of the charge's orbit.
-r = 30e3 ; % r, theta and phi : the observation point. 
+a = ( 6000+[r1 r2 90 150 450] )*1e3; % the radius of each interface of neighboring shells.
+r_prime = 6010e3;
+r = 6035e3;
+%a = [1 2 3 4 100e3] ; % the radius of each interface of neighboring shells.
+%r_prime = 1.5; % the radius of the charge's orbit.
+%r = 30e3 ; % r, theta and phi : the observation point. 
 
 theta_prime = pi/2;
-theta = pi/2 - pi/4  ;
+theta = pi/2 - 0.01; 
 phi = 0;
-v = 3e9; % linear velocity of the charge.
+v = 3; % linear velocity of the charge.
 M_truc = 1+3e3; % the truncation frequency = M_truc * Omeg.
 cal = 6; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
-precision = 1e-5;
+precision = 1e-6;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%% physical constants %%%%%%%%%%
@@ -50,20 +50,21 @@ ii = idx(1);
 idx = find(a>r_prime);
 jj = idx(1);
 
-%MM = 1:100:M_truc;
-MM = 100;
+MM = 1:50:M_truc;
+%MM = 51;
 for M = MM 
+	
 	w = M*Omeg;
 
-%	%%%%%%%% media distribution 1 %%%%%%%%%%
-%	% the order of the elements in u and e shall be from +z to -z direction 
-%	u = [1 1 1 1 1 1]; 
-%	e_F = plasma_para(ne_F,w);
-%	e_E = plasma_para(ne_E,w);
-%	e_D = plasma_para(ne_D,w);
-%	e_earth = 1 + 1i*1e9/e0/w;
-%	e = [e_earth 1 e_D e_E e_F 1];
-%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%%%%%%%% media distribution 1 %%%%%%%%%%
+	% the order of the elements in u and e shall be from +z to -z direction 
+	u = [1 1 1 1 1 1]; 
+	e_F = plasma_para(ne_F,w);
+	e_E = plasma_para(ne_E,w);
+	e_D = plasma_para(ne_D,w);
+	e_earth = 1 + 1i*1e9/e0/w;
+	e = [e_earth 1 e_D e_E e_F 1];
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %	%%%%%%%% media distribution 2 %%%%%%%%%%
 %	% the order of the elements in u and e shall be from +z to -z direction 
@@ -72,11 +73,11 @@ for M = MM
 %	e = [e_earth 1 1 1 1 1];
 %	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-	%%%%%%%% media distribution 3 %%%%%%%%%%
-	% the order of the elements in u and e shall be from +z to -z direction 
-	u = [1 1 1 1 1 1]; 
-	e = [1 1 1 1 1 1];
-	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%	%%%%%%%% media distribution 3 %%%%%%%%%%
+%	% the order of the elements in u and e shall be from +z to -z direction 
+%	u = [1 1 1 1 1 1]; 
+%	e = [1 1 1 1 1 1];
+%	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 	k0 = w*sqrt(e0*u0);
 	kj = k0*sqrt(e(jj)*u(jj));
@@ -467,7 +468,7 @@ for M = MM
 	endswitch
 
 endfor
-keyboard
+
 
 switch cal
 case {1}

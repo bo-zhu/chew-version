@@ -42,8 +42,11 @@ if N>2
 			jn(ii-1) = j_k1a0/j_k1a1 * exp( abs(imag(k1a0))-abs(imag(k1a1)) );
 		else
 			alpha = ( h_k1a1*j_k1a0 )/( h_k1a0*j_k1a1 ) * exp(1i*k1a1-1i*k1a0+abs(imag(k1a0))-abs(imag(k1a1))); 
-; 
 			jn(ii-1) = j_k1a0/j_k1a1 * exp( abs(imag(k1a0))-abs(imag(k1a1)) );
+		end
+		if isnan(alpha) || isinf(alpha) || isnan(jn(ii-1)) || isinf(jn(ii-1))
+			alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
+			jn(ii-1) = (k1a0/k1a1)^ALPHA;
 		end
 		D = 1-R_12*R_std(ii-1)*alpha;
 		R_std(ii) = R_21 + T_12*T_21*R_std(ii-1)*alpha/D;

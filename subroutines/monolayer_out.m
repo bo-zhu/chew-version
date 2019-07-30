@@ -63,5 +63,9 @@ else
 	end
 end	
 
+if isinf(R_12) || isnan(R_12) || isinf(T_12) || isnan(T_12)
+	R_12 = (e2-e1)/(e1+e2+e2/ALPHA);
+	T_12 = e2/(e1+e2+e2/ALPHA)*2*(ALPHA+0.5)/ALPHA;
+end
 
 endfunction	

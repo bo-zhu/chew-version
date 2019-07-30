@@ -62,4 +62,9 @@ else
 	endif
 endif	
 
+if isinf(R_21) || isnan(R_21) || isinf(T_21) || isnan(T_21)
+	R_21 = (e1-e2)/(e1*ALPHA/(ALPHA+1)+e2);
+	T_21 = e1/(e1+e2+e2/ALPHA)*2*(ALPHA+0.5)/ALPHA;
+end
+
 endfunction	
