@@ -89,32 +89,37 @@ for M = MM
 
 	now(1) = sqrt(2) * cof * (1-x^2)^(M/2);
 	now(2) = x * sqrt(2*M+1) * now(1);
-	now(3) = legendre_recursion('sch',x,now(1),now(2),M+1,M);	
-	now(4) = legendre_recursion('sch',x,now(2),now(3),M+2,M);
+%	now(3) = legendre_recursion('sch',x,now(1),now(2),M+1,M);	
+%	now(4) = legendre_recursion('sch',x,now(2),now(3),M+2,M);
 
 	now_prime(1) = sqrt(2) * cof * (1-x_prime^2)^(M/2);
 	now_prime(2) = x_prime * sqrt(2*M+1) * now_prime(1);
-	now_prime(3) = legendre_recursion('sch',x_prime,now_prime(1),now_prime(2),M+1,M);	
-	now_prime(4) = legendre_recursion('sch',x_prime,now_prime(2),now_prime(3),M+2,M);
+%	now_prime(3) = legendre_recursion('sch',x_prime,now_prime(1),now_prime(2),M+1,M);	
+%	now_prime(4) = legendre_recursion('sch',x_prime,now_prime(2),now_prime(3),M+2,M);
 
 	switch cal
 	case {1} % calculate H_r
 
-		delta_old =0;
-		n = M+1;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
+		delta_old = 1e10;
+		n = M;
+		sp_old_old = now(1);
+		sp_old = now(2);
+		sp_prime_old_old = now_prime(1);
+		sp_prime_old = now_prime(2);
 		do	
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				delta = sqrt(n^2-M^2) * F * now_prime(n-M) * now(n-M+1);	
+			if n==M	
+				Cp_nM = n*x_prime*now_prime(1) / sin(theta_prime);
+				delta = (n+0.5) * F * Cp_nM * now(1);	
+			elseif n==M+1	
+				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
+				delta = (n+0.5) * F * Cp_nM * now(2);	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				delta = sqrt(n^2-M^2) * F * sp_prime_old * sp;
+				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
+				delta = (n+0.5) * F * Cp_nM * sp;
 
 				sp_old_old = sp_old;
 				sp_old = sp;
@@ -131,7 +136,7 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) * ( 1i*v*kj ) / ( 4*pi*r ) * u(jj)/u(ii) * exp(1i*M*phi); 
+		field_value(M) = field_value(M) * v*kj/(4i*pi*r) * u(jj)/u(ii) * exp(1i*M*phi); 
 
 	case {2} % calculate E_r
 
