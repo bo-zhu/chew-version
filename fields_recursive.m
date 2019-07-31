@@ -21,7 +21,7 @@ theta = pi/2 - 0.01;
 phi = 0;
 v = 3; % linear velocity of the charge.
 M_truc = 1+3e3; % the truncation frequency = M_truc * Omeg.
-cal = 6; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
+cal = 1; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
 precision = 1e-6;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -133,7 +133,8 @@ for M = MM
 				break
 			else
 				n = n+1; 
-				delta_old = delta ;
+				delta_old = delta 
+keyboard
 			endif
 		until (0)
 		field_value(M) = field_value(M) * v*kj/(4i*pi*r) * u(jj)/u(ii) * exp(1i*M*phi); 
