@@ -89,32 +89,33 @@ for M = MM
 
 	now(1) = sqrt(2) * cof * (1-x^2)^(M/2);
 	now(2) = x * sqrt(2*M+1) * now(1);
-	now(3) = legendre_recursion('sch',x,now(1),now(2),M+1,M);	
-	now(4) = legendre_recursion('sch',x,now(2),now(3),M+2,M);
-
 	now_prime(1) = sqrt(2) * cof * (1-x_prime^2)^(M/2);
 	now_prime(2) = x_prime * sqrt(2*M+1) * now_prime(1);
-	now_prime(3) = legendre_recursion('sch',x_prime,now_prime(1),now_prime(2),M+1,M);	
-	now_prime(4) = legendre_recursion('sch',x_prime,now_prime(2),now_prime(3),M+2,M);
+
+	delta_old = 1e10;
+	n = M;
+	sp_old_old = now(1);
+	sp_old = now(2);
+	sp_prime_old_old = now_prime(1);
+	sp_prime_old = now_prime(2);
 
 	switch cal
 	case {1} % calculate H_r
 
-		delta_old =0;
-		n = M+1;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
 		do	
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				delta = sqrt(n^2-M^2) * F * now_prime(n-M) * now(n-M+1);	
+			if n==M	
+				Cp_nM = n*x_prime*now_prime(1) / sin(theta_prime);
+				delta = (n+0.5) * F * Cp_nM * now(1);	
+			elseif n==M+1	
+				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
+				delta = (n+0.5) * F * Cp_nM * now(2);	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				delta = sqrt(n^2-M^2) * F * sp_prime_old * sp;
+				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M);
+				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
+				delta = (n+0.5) * F * Cp_nM * sp;
 
 				sp_old_old = sp_old;
 				sp_old = sp;
@@ -128,24 +129,20 @@ for M = MM
 				break
 			else
 				n = n+1; 
-				delta_old = delta ;
+				delta_old = delta; 
 			endif
 		until (0)
-		field_value(M) = field_value(M) * ( 1i*v*kj ) / ( 4*pi*r ) * u(jj)/u(ii) * exp(1i*M*phi); 
+		field_value(M) = field_value(M) * v*kj/(4i*pi*r) * u(jj)/u(ii) * exp(1i*M*phi); 
 
 	case {2} % calculate E_r
 
-		delta_old = 0;
-		n = M;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(n-M+1) * now(n-M+1);	
+			if n==M	
+				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(1) * now(1);	
+			elseif n==M+1
+				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(2) * now(2);	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
@@ -170,17 +167,13 @@ for M = MM
 
 	case {3} % calculate H_theta
 
-		delta_old = 0;
-		n = M;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(n-M+1) * now(n-M+1);	
+			if n==M	
+				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(1) * now(1);	
+			elseif n==M+1
+				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(2) * now(2);	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
@@ -201,25 +194,31 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) * 1i*M/sin(theta) * w/(4*pi)*kj * exp(1i*M*phi); 
+		field_value(M) = field_value(M) * 1i*M/sin(theta) * w*kj/4/pi * exp(1i*M*phi); 
 
-		delta_old = 0;
-		n = M+1;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
+		delta_old = 1e10;
+		n = M;
+		sp_old_old = now(1);
+		sp_old = now(2);
+		sp_prime_old_old = now_prime(1);
+		sp_prime_old = now_prime(2);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
-				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * now_prime(n-M) * C_nM;	
+			if n==M	
+				C_nM =  n*x*now(1) / sin(theta);
+				Cp_nM =  n*x_prime*now_prime(1) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * C_nM * Cp_nM;	
+			elseif n==M+1	
+				C_nM = ( n*x*now(2) - sqrt(n^2-M^2)*now(1) ) / sin(theta);
+				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * C_nM * Cp_nM;	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
-				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * sp_prime_old * C_nM;	
+				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * C_nM * Cp_nM;	
 
 				sp_old_old = sp_old;
 				sp_old = sp;
@@ -237,26 +236,25 @@ for M = MM
 			endif
 		until (0)
 		
-		field_value_1(M) = field_value_1(M) * ( 1i*v*kj ) / ( 4*pi*r ) * u(jj)/u(ii) * exp(1i*M*phi); 
+		field_value_1(M) = field_value_1(M) * v*kj / ( 4i*pi*r ) * u(jj)/u(ii) * exp(1i*M*phi); 
 		field_value(M) = field_value(M) + field_value_1(M);
 
 	case {4} % calculate E_theta
 
-		delta_old =0;
-		n = M+1;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
 		do	
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				delta = -(n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * now_prime(n-M) * now(n-M+1);	
+			if n==M	
+				Cp_nM = ( n*x_prime*now_prime(1) ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * F * Cp_nM * now(1);	
+			elseif n==M+1
+				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * F * Cp_nM * now(2);	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				delta = -(n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * sp_prime_old * sp;
+				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * F * Cp_nM * sp;
 
 				sp_old_old = sp_old;
 				sp_old = sp;
@@ -275,29 +273,26 @@ for M = MM
 		until (0)
 		field_value(M) = field_value(M) * 1i*M / sin(theta)  * w*v*u(jj)*u0*kj/(4*pi) * exp(1i*M*phi) ;
 
-		delta_old = 0;
+		delta_old = 1e10;
 		n = M;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
+		sp_old_old = now(1);
+		sp_old = now(2);
+		sp_prime_old_old = now_prime(1);
+		sp_prime_old = now_prime(2);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				if n == M
-					C_nM = ( n*x*now(n-M+1) ) / sin(theta);	
-				else
-					C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
-				end
-				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) *...
-					now_prime(n-M+1) * C_nM	;
+			if n == M
+				C_nM = n*x*now(1) / sin(theta);	
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) * now_prime(1) * C_nM;
+			elseif n==M+1
+				C_nM = ( n*x*now(2) - sqrt(n^2-M^2)*now(1) ) / sin(theta);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) * now_prime(2) * C_nM;
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
-				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) *...
-					sp_prime * C_nM	;
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) * sp_prime * C_nM;
 
 				sp_old_old = sp_old;
 				sp_old = sp;
@@ -319,22 +314,21 @@ for M = MM
 
 	case {5} % calculate H_phi
 
-		delta_old = 0;
+		delta_old = 1e10;
 		n = M;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
+		sp_old_old = now(1);
+		sp_old = now(2);
+		sp_prime_old_old = now_prime(1);
+		sp_prime_old = now_prime(2);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				if n == M
-					C_nM = n*x*now(n-M+1) / sin(theta);	
-				else
-					C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
-				end
-				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(n-M+1) * C_nM;	
+			if n == M
+				C_nM = n*x*now(1) / sin(theta);	
+				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(1) * C_nM;	
+			elseif n==M+1
+				C_nM = ( n*x*now(2) - sqrt(n^2-M^2)*now(1) ) / sin(theta);
+				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(2) * C_nM;	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
@@ -358,21 +352,26 @@ for M = MM
 		until (0)
 		field_value(M) = -field_value(M) * w*kj / ( 4*pi ) * exp(1i*M*phi); 
 
-		delta_old = 0;
-		n = M+1;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
+		delta_old = 1e10;
+		n = M;
+		sp_old_old = now(1);
+		sp_old = now(2);
+		sp_prime_old_old = now_prime(1);
+		sp_prime_old = now_prime(2);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * now_prime(n-M) * now(n-M+1);	
+			if n==M	
+				Cp_nM = ( n*x_prime*now_prime(1) ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * Cp_nM * now(1);	
+			elseif n==M+1
+				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * Cp_nM * now(2);	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
-				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * (F+r*dF_r) * sp_prime_old * sp;	
+				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
+				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * Cp_nM * sp;	
 
 				sp_old_old = sp_old;
 				sp_old = sp;
@@ -390,27 +389,33 @@ for M = MM
 			endif
 		until (0)
 		field_value_1(M) = field_value_1(M) * ( M*v*kj ) / ( 4*pi*r*sin(theta) ) * u(jj)/u(ii) * exp(1i*M*phi); 
-		field_value(M) = field_value(M) - field_value_1(M);
+		field_value(M) = field_value(M) + field_value_1(M);
 
 	case {6} % calculate E_phi
 
-		delta_old = 0;
-		n = M+1;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
+		delta_old = 1e10;
+		n = M;
+		sp_old_old = now(1);
+		sp_old = now(2);
+		sp_prime_old_old = now_prime(1);
+		sp_prime_old = now_prime(2);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
-				C_nM = ( n*x*now(n-M+1) - sqrt(n^2-M^2)*now(n-M) ) / sin(theta);
-				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * now_prime(n-M) * C_nM;	
+			if n==M	
+				Cp_nM = ( n*x_prime*now_prime(1) ) / sin(theta_prime);
+				C_nM = ( n*x*now(1) ) / sin(theta);
+				delta = (n+0.5)/n/(n+1) * F * Cp_nM * C_nM;	
+			elseif n==M+1	
+				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
+				C_nM = ( n*x*now(2) - sqrt(n^2-M^2)*now(1) ) / sin(theta);
+				delta = (n+0.5)/n/(n+1) * F * Cp_nM * C_nM;	
 			else
 				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
 				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime) ;
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta) ;
-				delta = (n+0.5)*sqrt(n^2-M^2)/n/(n+1) * F * sp_prime_old * C_nM;	
+				delta = (n+0.5)/n/(n+1) * F * Cp_nM * C_nM;	
 
 				sp_old_old = sp_old;
 				sp_old = sp;
@@ -420,25 +425,26 @@ for M = MM
 
 			field_value(M) = field_value(M) + delta;
 			if ( abs( delta/field_value(M) )<precision && abs( delta_old/field_value(M) )<precision )
-				printf('E_phi_term1: converged after %d iterations. \n', n-M+2);
+				printf('E_phi_term1: converged after %d iterations. \n', n-M+1);
 				break
 			else
 				n = n+1; 
-				delta_old = delta ;
-			endif
-		until (0)
-		field_value(M) = field_value(M) * ( w*v*u(jj)*u0*kj ) / ( 4*pi ) * exp(1i*M*phi); 
+				delta_old = delta;
+			end
 
-		delta_old = 0;
+		until (0)
+		field_value(M) = field_value(M) * ( -w*v*u(jj)*u0*kj ) / ( 4*pi ) * exp(1i*M*phi); 
+
+		delta_old = 1e10;
 		n = M;
-		sp_old_old = now(3);
-		sp_old = now(4);
-		sp_prime_old_old = now_prime(3);
-		sp_prime_old = now_prime(4);
+		sp_old_old = now(1);
+		sp_old = now(2);
+		sp_prime_old_old = now_prime(1);
+		sp_prime_old = now_prime(2);
 		do
 			[F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
 
-			if n<=M+3	
+			if n<=M+1	
 				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*r_prime*d2F) *...
 					 now_prime(n-M+1) * now(n-M+1);	
 			else
@@ -452,6 +458,8 @@ for M = MM
 				sp_prime_old_old = sp_prime_old;
 				sp_prime_old = sp_prime;
 			end
+delta 
+keyboard
 
 			field_value_1(M) = field_value_1(M) + delta;
 			if ( abs( delta/field_value_1(M) )<precision && abs( delta_old/field_value_1(M) )<precision )
