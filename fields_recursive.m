@@ -458,8 +458,6 @@ for M = MM
 				sp_prime_old_old = sp_prime_old;
 				sp_prime_old = sp_prime;
 			end
-delta 
-keyboard
 
 			field_value_1(M) = field_value_1(M) + delta;
 			if ( abs( delta/field_value_1(M) )<precision && abs( delta_old/field_value_1(M) )<precision )
