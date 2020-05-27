@@ -12,17 +12,20 @@ r2 = 60;
 a = ( 6000+[r1 r2 90 150 450] )*1e3; % the radius of each interface of neighboring shells.
 r_prime = 6010e3;
 r = 6035e3;
+v = 3; % linear velocity of the charge.
+
+% to validate the H field in the far field region
 %a = [1 2 3 4 100e3] ; % the radius of each interface of neighboring shells.
 %r_prime = 1.5; % the radius of the charge's orbit.
-%r = 30e3 ; % r, theta and phi : the observation point. 
+%r = 51e3 ; % r, theta and phi : the observation point. 
+%v = 1e9; % linear velocity of the charge.
 
 theta_prime = pi/2;
-theta = pi/2 - 0.01; 
+theta = pi/2-0.01; 
 phi = 0;
-v = 3; % linear velocity of the charge.
-M_truc = 1+3e3; % the truncation frequency = M_truc * Omeg.
-cal = 6; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
-precision = 1e-6;
+M_truc = 1+2e3; % the truncation frequency = M_truc * Omeg.
+cal = 5; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
+precision = 1e-5;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%% physical constants %%%%%%%%%%
@@ -50,8 +53,8 @@ ii = idx(1);
 idx = find(a>r_prime);
 jj = idx(1);
 
-MM = 1:50:M_truc;
-%MM = 51;
+MM = 1:100:M_truc;
+%MM = 1;
 for M = MM 
 	
 	w = M*Omeg;
