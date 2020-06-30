@@ -32,22 +32,14 @@ if N>2
 		j_k1a1 = sbesselj(ALPHA,k1a1,'norm');
 		j_k1a0 = sbesselj(ALPHA,k1a0,'norm');
 
-		if abs(k1a1)<1
-			alpha = (a(ii-1)/a(ii))^(2*ALPHA+1);
-			jn(ii-1) = (k1a0/k1a1)^ALPHA;
-		elseif abs(k1a0)<1
-			Factor = 2*ALPHA-1:-2:1;
-			PROD = prod(k1a0./Factor);
-			alpha = 1i*pi*k1a0/(2*ALPHA+1) * ( PROD/gamma(0.5) )^2 * h_k1a1/j_k1a1 * exp(1i*k1a1-abs(imag(k1a1)));
-			jn(ii-1) = j_k1a0/j_k1a1 * exp( abs(imag(k1a0))-abs(imag(k1a1)) );
-		else
-			alpha = ( h_k1a1*j_k1a0 )/( h_k1a0*j_k1a1 ) * exp(1i*k1a1-1i*k1a0+abs(imag(k1a0))-abs(imag(k1a1))); 
-			jn(ii-1) = j_k1a0/j_k1a1 * exp( abs(imag(k1a0))-abs(imag(k1a1)) );
-		end
-		if isnan(alpha) || isinf(alpha) || isnan(jn(ii-1)) || isinf(jn(ii-1))
-			alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
-			jn(ii-1) = (k1a0/k1a1)^ALPHA;
-		end
+		alpha = ( h_k1a1*j_k1a0 )/( h_k1a0*j_k1a1 ) * exp(1i*k1a1-1i*k1a0+abs(imag(k1a0))-abs(imag(k1a1))); 
+		jn(ii-1) = j_k1a0/j_k1a1 * exp( abs(imag(k1a0))-abs(imag(k1a1)) );
+
+%		if isnan(alpha) || isinf(alpha) || isnan(jn(ii-1)) || isinf(jn(ii-1))
+%			alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
+%			jn(ii-1) = (k1a0/k1a1)^ALPHA;
+%		end
+
 		D = 1-R_12*R_std(ii-1)*alpha;
 		R_std(ii) = R_21 + T_12*T_21*R_std(ii-1)*alpha/D;
 		S(ii) = T_21/D;

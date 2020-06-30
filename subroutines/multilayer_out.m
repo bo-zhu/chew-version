@@ -32,23 +32,13 @@ if N>2
 		j_k2a1 = sbesselj(ALPHA,k2a1,'norm');
 		j_k2a2 = sbesselj(ALPHA,k2a2,'norm');
 
-		if abs(k2a2)<1
-			alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
-			hn(ii) = (k2a2/k2a1)^(-ALPHA-1);
-		elseif abs(k2a1)<1
-			Factor = 2*ALPHA-1:-2:1;
-			SUM = sum(log(k2a1./Factor),'extra');
-			alpha = 1i*pi*k2a1/(2*ALPHA+1) * ( exp(SUM)/gamma(0.5) )^2 * h_k2a2/j_k2a2 * exp(1i*k2a2-abs(imag(k2a2)));
-			hn(ii) = 1i*sqrt(pi)/gamma(0.5)*h_k2a2*k2a1*exp(1i*k2a2+SUM);
-		else
-			alpha = ( h_k2a2*j_k2a1 )/( h_k2a1*j_k2a2 ) * exp(1i*k2a2-1i*k2a1+abs(imag(k2a1))-abs(imag(k2a2))); 
-			hn(ii) = h_k2a2/h_k2a1 * exp(1i*k2a2-1i*k2a1);
-		end
+		alpha = ( h_k2a2*j_k2a1 )/( h_k2a1*j_k2a2 ) * exp(1i*k2a2-1i*k2a1+abs(imag(k2a1))-abs(imag(k2a2))); 
+		hn(ii) = h_k2a2/h_k2a1 * exp(1i*k2a2-1i*k2a1);
 		
-		if isnan(alpha) || isinf(alpha) || isnan(hn(ii)) || isinf(hn(ii))
-			alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
-			hn(ii) = (k2a2/k2a1)^(-ALPHA-1);
-		end
+	%	if isnan(alpha) || isinf(alpha) || isnan(hn(ii)) || isinf(hn(ii))
+	%		alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
+	%		hn(ii) = (k2a2/k2a1)^(-ALPHA-1);
+	%	end
 
 		D = 1-R_21*R_out(ii+1)*alpha;
 		R_out(ii) = R_12 + T_21*T_12*R_out(ii+1)*alpha/D;
