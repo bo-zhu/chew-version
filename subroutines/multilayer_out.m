@@ -27,24 +27,22 @@ if N>2
 		k2a1 = k2*a(ii);
 		k2a2 = k2*a(ii+1);
 
-		h_k2a1 = sbesselh(ALPHA,1,k2a1,'norm');
-		h_k2a2 = sbesselh(ALPHA,1,k2a2,'norm');
-		j_k2a1 = sbesselj(ALPHA,k2a1,'norm');
-		j_k2a2 = sbesselj(ALPHA,k2a2,'norm');
+		h_k2a1 = sbesselh(ALPHA,1,k2a1,'none');
+		h_k2a2 = sbesselh(ALPHA,1,k2a2,'none');
+		j_k2a1 = sbesselj(ALPHA,k2a1,'none');
+		j_k2a2 = sbesselj(ALPHA,k2a2,'none');
 
-		alpha = ( h_k2a2*j_k2a1 )/( h_k2a1*j_k2a2 ) * exp(1i*k2a2-1i*k2a1+abs(imag(k2a1))-abs(imag(k2a2))); 
-		hn(ii) = h_k2a2/h_k2a1 * exp(1i*k2a2-1i*k2a1);
 		
 	%	if isnan(alpha) || isinf(alpha) || isnan(hn(ii)) || isinf(hn(ii))
 	%		alpha = (a(ii)/a(ii+1))^(2*ALPHA+1);
 	%		hn(ii) = (k2a2/k2a1)^(-ALPHA-1);
 	%	end
 
-		D = 1-R_21*R_out(ii+1)*alpha;
-		R_out(ii) = R_12 + T_21*T_12*R_out(ii+1)*alpha/D;
+		D = 1-R_21*R_out(ii+1);
+		R_out(ii) = R_12 + T_21*T_12*R_out(ii+1)/D;
 		S(ii) = T_12/D;
 	end
-	T_out(2:N-1) = cumprod(hn.*S(1:N-2)).*S(2:N-1);
+	T_out(2:N-1) = cumprod(S(1:N-2)).*S(2:N-1);
 endif
 
 T_out(1) = S(1);

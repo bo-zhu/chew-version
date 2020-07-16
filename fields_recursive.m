@@ -12,7 +12,7 @@ r2 = 60;
 a = ( 6000+[r1 r2 90 150 450] )*1e3; % the radius of each interface of neighboring shells.
 r_prime = 6010e3;
 r = 6035e3;
-v = 3; % linear velocity of the charge.
+v = 300; % linear velocity of the charge.
 
 % to validate the H field in the far field region
 %a = [1 2 3 4 100e3] ; % the radius of each interface of neighboring shells.
@@ -21,10 +21,10 @@ v = 3; % linear velocity of the charge.
 %v = 1e9; % linear velocity of the charge.
 
 theta_prime = pi/2;
-theta = pi/2-0.01; 
+theta = pi/2; 
 phi = 0;
 M_truc = 1+2e3; % the truncation frequency = M_truc * Omeg.
-cal = 5; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
+cal = 2; % (1) H_r; (2) E_r; (3) H_theta; (4) E_theta; (5) H_phi; (6) E_phi.
 precision = 1e-5;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -115,8 +115,8 @@ for M = MM
 				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
 				delta = (n+0.5) * F * Cp_nM * now(2);	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M);
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M);
 				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
 				delta = (n+0.5) * F * Cp_nM * sp;
 
@@ -147,8 +147,8 @@ for M = MM
 			elseif n==M+1
 				delta = (n+0.5) * (F+r_prime*dF_rp) * now_prime(2) * now(2);	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5) * (F+r_prime*dF_rp) * sp_prime * sp;
 
 				sp_old_old = sp_old;
@@ -166,7 +166,7 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) * ( 1i*kj ) / ( 4*pi*e(ii)*e0*r ) * exp(1i*M*phi); 
+		field_value(M) = field_value(M) * ( 1i*kj ) / ( 4*pi*e(ii)*e0*r*sin(theta_prime) ) * exp(1i*M*phi); 
 
 	case {3} % calculate H_theta
 
@@ -178,8 +178,8 @@ for M = MM
 			elseif n==M+1
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(2) * now(2);	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * sp_prime * sp;
 
 				sp_old_old = sp_old;
@@ -197,7 +197,7 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = field_value(M) * 1i*M/sin(theta) * w*kj/4/pi * exp(1i*M*phi); 
+		field_value(M) = field_value(M) * 1i*M/sin(theta) * w*kj/4/pi/sin(theta_prime) * exp(1i*M*phi); 
 
 		delta_old = 1e10;
 		n = M;
@@ -217,8 +217,8 @@ for M = MM
 				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * C_nM * Cp_nM;	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * C_nM * Cp_nM;	
@@ -254,8 +254,8 @@ for M = MM
 				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
 				delta = (n+0.5)/n/(n+1) * F * Cp_nM * now(2);	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
 				delta = (n+0.5)/n/(n+1) * F * Cp_nM * sp;
 
@@ -292,8 +292,8 @@ for M = MM
 				C_nM = ( n*x*now(2) - sqrt(n^2-M^2)*now(1) ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) * now_prime(2) * C_nM;
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r+r_prime*dF_rp+r*r_prime*d2F) * sp_prime * C_nM;
 
@@ -312,7 +312,7 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value_1(M) = field_value_1(M) * 1i*kj / ( 4*pi*r*e(ii)*e0 ) * exp(1i*M*phi); 
+		field_value_1(M) = field_value_1(M) * 1i*kj / ( 4*pi*r*e(ii)*e0*sin(theta_prime) ) * exp(1i*M*phi); 
 		field_value(M) = field_value(M) + field_value_1(M); 
 
 	case {5} % calculate H_phi
@@ -333,8 +333,8 @@ for M = MM
 				C_nM = ( n*x*now(2) - sqrt(n^2-M^2)*now(1) ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp) * now_prime(2) * C_nM;	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * (F+r_prime*dF_rp)* sp_prime * C_nM;	
 
@@ -353,7 +353,7 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value(M) = -field_value(M) * w*kj / ( 4*pi ) * exp(1i*M*phi); 
+		field_value(M) = -field_value(M) * w*kj / ( 4*pi*sin(theta_prime) ) * exp(1i*M*phi); 
 
 		delta_old = 1e10;
 		n = M;
@@ -371,8 +371,8 @@ for M = MM
 				Cp_nM = ( n*x_prime*now_prime(2) - sqrt(n^2-M^2)*now_prime(1) ) / sin(theta_prime);
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * Cp_nM * now(2);	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime);
 				delta = (n+0.5)/n/(n+1) * (F+r*dF_r) * Cp_nM * sp;	
 
@@ -414,8 +414,8 @@ for M = MM
 				C_nM = ( n*x*now(2) - sqrt(n^2-M^2)*now(1) ) / sin(theta);
 				delta = (n+0.5)/n/(n+1) * F * Cp_nM * C_nM;	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				Cp_nM = ( n*x_prime*sp_prime - sqrt(n^2-M^2)*sp_prime_old ) / sin(theta_prime) ;
 				C_nM = ( n*x*sp - sqrt(n^2-M^2)*sp_old ) / sin(theta) ;
 				delta = (n+0.5)/n/(n+1) * F * Cp_nM * C_nM;	
@@ -451,8 +451,8 @@ for M = MM
 				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*r_prime*d2F) *...
 					 now_prime(n-M+1) * now(n-M+1);	
 			else
-				sp = legendre_recursion('sch',x,sp_old_old,sp_old,n-1,M); 
-				sp_prime = legendre_recursion('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
+				sp = legendre_increase_l('sch',x,sp_old_old,sp_old,n-1,M); 
+				sp_prime = legendre_increase_l('sch',x_prime,sp_prime_old_old,sp_prime_old,n-1,M); 
 				delta = (n+0.5)/n/(n+1) * (F + r*dF_r + r_prime*dF_rp + r*r_prime*d2F) *...
 					 sp_prime * sp;	
 
@@ -471,7 +471,7 @@ for M = MM
 				delta_old = delta ;
 			endif
 		until (0)
-		field_value_1(M) = field_value_1(M) * M*kj*exp(1i*M*phi) / ( 4*pi*e(ii)*e0*r*sin(theta) ) ; 
+		field_value_1(M) = field_value_1(M) * M*kj*exp(1i*M*phi) / ( 4*pi*e(ii)*e0*r*sin(theta*sin(theta_prime)  ) ; 
 		field_value(M) = field_value(M) - field_value_1(M); 
 
 	endswitch
