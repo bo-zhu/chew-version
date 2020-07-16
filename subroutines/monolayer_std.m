@@ -29,37 +29,26 @@ if mode=='TE' || mode=='te'  % duality principle
 	e2 = temp;
 endif
 
-H_k2a = H(ALPHA,k2a,'norm'); 
-der_H_k2a = der_H(ALPHA,k2a,'norm');
+H_k2a = H(ALPHA,k2a,'none'); 
+der_H_k2a = der_H(ALPHA,k2a,'none');
 
-J_k1a = J(ALPHA,k1a,'norm');
-J_k2a = J(ALPHA,k2a,'norm');
-der_J_k1a = der_J(ALPHA,k1a,'norm');
-der_J_k2a = der_J(ALPHA,k2a,'norm');
+J_k1a = J(ALPHA,k1a,'none');
+J_k2a = J(ALPHA,k2a,'none');
+der_J_k1a = der_J(ALPHA,k1a,'none');
+der_J_k2a = der_J(ALPHA,k2a,'none');
 
-h_k2a = sbesselh(ALPHA,1,k2a,'norm');
-j_k1a = sbesselj(ALPHA,k1a,'norm');
-j_k2a = sbesselj(ALPHA,k2a,'norm');
+h_k2a = sbesselh(ALPHA,1,k2a,'none');
+j_k1a = sbesselj(ALPHA,k1a,'none');
+j_k2a = sbesselj(ALPHA,k2a,'none');
 
-if abs(k1a)<1 
-	if abs(k2a)<1
-		R_21 = (e1-e2)/(e1*ALPHA/(ALPHA+1)+e2);
-		T_21 = e1/(e1+e2+e2/ALPHA)*2*(ALPHA+0.5)/ALPHA;
-	else
-		D = sqrt(e1*u2)*k1a*der_H_k2a - sqrt(e2*u1)*(ALPHA+1)*H_k2a;
-		R_21 = h_k2a/j_k2a*( sqrt(e2*u1)*(ALPHA+1)*J_k2a - sqrt(e1*u2)*k1a*der_J_k2a )/D;
-		T_21 = 1i*e1*sqrt(u1/e2)/j_k2a/D * exp(-1i*k2a-abs(imag(k2a)));
-	endif
-else
-	if abs(k2a)<1
-		D = sqrt(e1*u2)*ALPHA*J_k1a + sqrt(e2*u1)*k2a*der_J_k1a;
-		R_21 = ( sqrt(e1*u2)*(ALPHA+1)*J_k1a - sqrt(e2*u1)*k2a*der_J_k1a )/D;
-		T_21 = e1*sqrt(u1/e2)*(2*ALPHA+1)*k2a*j_k1a/D;
-	else 
-		D = sqrt(e1*u2)*J_k1a*der_H_k2a - sqrt(e2*u1)*H_k2a*der_J_k1a;
-		R_21 = h_k2a/j_k2a*( sqrt(e2*u1)*J_k2a*der_J_k1a - sqrt(e1*u2)*J_k1a*der_J_k2a )/D;
-		T_21 = j_k1a/j_k2a*1i*e1*sqrt(u1/e2)/D * exp(-1i*k2a-abs(imag(k2a)));
-	endif
-endif	
+
+	D = sqrt(e1*u2)*J_k1a*der_H_k2a - sqrt(e2*u1)*H_k2a*der_J_k1a;
+	R_21 = ( sqrt(e2*u1)*J_k2a*der_J_k1a - sqrt(e1*u2)*J_k1a*der_J_k2a )/D;
+	T_21 = 1i*e1*sqrt(u1/e2)/D ;
+
+%if isinf(R_21) || isnan(R_21) || isinf(T_21) || isnan(T_21)
+%	R_21 = (e1-e2)/(e1*ALPHA/(ALPHA+1)+e2);
+%	T_21 = e1/(e1+e2+e2/ALPHA)*2*(ALPHA+0.5)/ALPHA;
+%end
 
 endfunction	

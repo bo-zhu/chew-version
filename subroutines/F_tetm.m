@@ -29,189 +29,159 @@ a_std_jj = a(1:jj-1);
 
 kj = k0*sqrt( u(jj)*e(jj) );
 
-%%%%%%%% calculate parameters relevant to aj and aj__  %%%%%%%%%
+%%%%%%%% calculate parameters relevant to aj, aj__, ai and ai__ %%%%%%%%%
 kj_aj__ = kj*a(jj-1);
 kj_aj = kj*a(jj);
 
-j_kj_aj = sbesselj(n,kj_aj,'norm');
-j_kj_aj__ = sbesselj(n,kj_aj__,'norm');
-h_kj_aj = sbesselh(n,1,kj_aj,'norm');
-h_kj_aj__ = sbesselh(n,1,kj_aj__,'norm');
+j_kj_aj = sbesselj(n,kj_aj,'none');
+j_kj_aj__ = sbesselj(n,kj_aj__,'none');
+h_kj_aj = sbesselh(n,1,kj_aj,'none');
+h_kj_aj__ = sbesselh(n,1,kj_aj__,'none');
 
-R_out_jj = multilayer_out(mode,u_out_jj,e_out_jj,a_out_jj,k0,n);
-R_std_jj = multilayer_std(mode,u_std_jj,e_std_jj,a_std_jj,k0,n);
+[R_out_jj T_out_jj] = multilayer_out(mode,u_out_jj,e_out_jj,a_out_jj,k0,n);
+[R_std_jj T_std_jj] = multilayer_std(mode,u_std_jj,e_std_jj,a_std_jj,k0,n);
 
-if abs(kj_aj)<1
-	alpha = ( a(jj-1)/a(ii) )^(2*n+1) ;
-elseif abs(kj_aj__)<1
-	Factor = 2*n-1:-2:1;
-	SUM = sum(log(kj_aj__./Factor),'extra');
-	alpha =  1i*pi/(2*n+1)/gamma(0.5)^2*kj_aj__*exp(SUM*2)*h_kj_aj/j_kj_aj * exp( 1i*kj_aj-abs(imag(kj_aj)) );
-else
-	alpha = j_kj_aj__*h_kj_aj/( h_kj_aj__*j_kj_aj ) * exp( 1i*(kj_aj-kj_aj__) + abs(imag(kj_aj__))-abs(imag(kj_aj)) ) ;
-end
-M_jj = 1/( 1 - R_out_jj(1)*R_std_jj(1) * alpha ); 
+%if isnan(alpha) || isinf(alpha)
+%	alpha = ( a(jj-1)/a(ii) )^(2*n+1) ;
+%end
 
-%%%%%%%% calculate parameters relevant to r and rp  %%%%%%%%%
-if r>rp
-	rg = r;
-	rl = rp;
-else
-	rg = rp;
-	rl = r;
-end
+M_jj = 1/( 1 - R_out_jj(1)*R_std_jj(end) ); 
+
+%%%%%%%% r and rp are in the same layer %%%%%%%%%%%%%%%%%%%%%
+if ii==jj
+  %%%%%%%% calculate parameters relevant to r and rp  %%%%%%%%%
+  if r>rp
+  	rg = r;
+  	rl = rp;
+  else
+  	rg = rp;
+  	rl = r;
+  end
 
 kj_rl = kj*rl;
 kj_rg = kj*rg;
 
-j_kj_rg = sbesselj(n,kj_rg,'norm');
-j_kj_rl = sbesselj(n,kj_rl,'norm');
-der_j_kj_rg = der_sbesselj(n,kj_rg,'norm');
-der_j_kj_rl = der_sbesselj(n,kj_rl,'norm');
+j_kj_rg = sbesselj(n,kj_rg,'none');
+j_kj_rl = sbesselj(n,kj_rl,'none');
+der_j_kj_rg = der_sbesselj(n,kj_rg,'none');
+der_j_kj_rl = der_sbesselj(n,kj_rl,'none');
 
-h_kj_rg = sbesselh(n,1,kj_rg,'norm');
-h_kj_rl = sbesselh(n,1,kj_rl,'norm');
-der_h_kj_rg = der_sbesselh(n,1,kj_rg,'norm');
-der_h_kj_rl = der_sbesselh(n,1,kj_rl,'norm');
+h_kj_rg = sbesselh(n,1,kj_rg,'none');
+h_kj_rl = sbesselh(n,1,kj_rl,'none');
+der_h_kj_rg = der_sbesselh(n,1,kj_rg,'none');
+der_h_kj_rl = der_sbesselh(n,1,kj_rl,'none');
 
-if abs(kj_aj)<1
-	F = (rl/rg)^n/( 1i*kj_rg*(2*n+1) ) ...
-		+ R_std_jj(1) * (a(jj-1)/rg)^n * (a(jj-1)/rl)^(n+1) / (1i*kj_rg*(2*n+1)) ...
-		+ R_out_jj(1) * (rg/a(jj))^n * (rl/a(jj))^n / (1i*kj_aj*(2*n+1)) ...
-		+ R_std_jj(1) * R_out_jj(1) * (rg/a(jj))^n * (a(jj-1)/a(jj) )^n * (a(jj-1)/rl)^(n+1) / (1i*(2*n+1)*kj_aj);
 
-	dF_rl = n*(rl/rg)^(n-1)/( 1i*kj_rg*rg*(2*n+1) ) ...
-		- R_std_jj(1) * (a(jj-1)/rg)^n * (n+1)/rl*(a(jj-1)/rl)^(n+1) / (1i*kj_rg*(2*n+1)) ...
-		+ R_out_jj(1) * (rg/a(jj))^n * n * (rl/a(jj))^(n-1) / (1i*kj_aj*a(jj)*(2*n+1)) ...
-		- R_std_jj(1) * R_out_jj(1) * (rg/a(jj))^n * (a(jj-1)/a(jj) )^n * (n+1)/rl*(a(jj-1)/rl)^(n+1) / (1i*(2*n+1)*kj_aj);
+	F = h_kj_rg * j_kj_rl  ... 
+		 + h_kj_rg * R_std_jj(end) * h_kj_rl  ...
+		 + R_out_jj(1) * j_kj_rg * j_kj_rl  ...
+		 + R_out_jj(1) * j_kj_rg * R_std_jj(end) * h_kj_rl ;
 
-	dF_rg = -(n+1)*(rl/rg)^n/( 1i*kj_rg*rg*(2*n+1) ) ...
-		- R_std_jj(1) * (n+1)/rg * (a(jj-1)/rg)^n * (a(jj-1)/rl)^(n+1) / (1i*kj_rg*(2*n+1)) ...
-		+ R_out_jj(1) * n/a(jj) * (rg/a(jj))^(n-1) * (rl/a(jj))^n / (1i*kj_aj*(2*n+1)) ...
-		+ R_std_jj(1) * R_out_jj(1) * n/a(jj) * (rg/a(jj))^(n-1) * (a(jj-1)/a(jj) )^n * (a(jj-1)/rl)^(n+1) / (1i*(2*n+1)*kj_aj);
+	dF_rl = kj * ( h_kj_rg * der_j_kj_rl  ...
+		       + h_kj_rg * R_std_jj(end) * der_h_kj_rl  ...
+		       + R_out_jj(1) * j_kj_rg * der_j_kj_rl  ...
+		       + R_out_jj(1) * j_kj_rg * R_std_jj(end) * der_h_kj_rl );
 
-	d2F = -n*(n+1)*(rl/rg)^(n-1)/( 1i*kj_rg*rg^2*(2*n+1) ) ...
-		+ R_std_jj(1) * ( (n+1)/rg )^2 * (a(jj-1)/rg)^n * (a(jj-1)/rl)^(n+1) / (1i*kj_rl*(2*n+1)) ...
-		+ R_out_jj(1) * ( n/a(jj) )^2 * (rg/a(jj))^(n-1) * (rl/a(jj))^(n-1) / (1i*kj_aj*(2*n+1)) ...
-		- R_std_jj(1) * R_out_jj(1) * n*(n+1)/a(jj)^2 * (rg/a(jj))^(n-1) * (a(jj-1)/a(jj) )^n * (a(jj-1)/rl)^(n+1) / (1i*(2*n+1)*kj_rl);
+	dF_rg = kj * ( der_h_kj_rg * j_kj_rl ...
+		       + der_h_kj_rg * R_std_jj(end) * h_kj_rl  ...
+		       + R_out_jj(1) * der_j_kj_rg * j_kj_rl  ...
+		       + R_out_jj(1) * der_j_kj_rg * R_std_jj(end) * h_kj_rl );
 
-elseif abs(kj_rg)<1
-	F = (rl/rg)^n/( 1i*kj_rg*(2*n+1) ) ...
-		+ R_std_jj(1) * (a(jj-1)/rg)^n * (a(jj-1)/rl)^(n+1) / (1i*kj_rg*(2*n+1)) ...
-		+ R_out_jj(1) * h_kj_aj / j_kj_aj * j_kj_rg * j_kj_rl * exp( 1i*kj_aj + abs(imag(-kj_aj+kj_rg+kj_rl)) ) ...
-		+ R_out_jj(1) * R_std_jj(1) * h_kj_aj / j_kj_aj * j_kj_rg * j_kj_aj__ * (a(jj-1)/rl)^(n+1) * exp( 1i*kj_aj + abs(imag(-kj_aj+kj_rg+kj_aj__)) ) ;
+	d2F = kj^2 * ( der_h_kj_rg * der_j_kj_rl  ...
+		       + der_h_kj_rg * R_std_jj(end) * der_h_kj_rl  ...
+		       + R_out_jj(1) * der_j_kj_rg * der_j_kj_rl  ...
+		       + R_out_jj(1) * der_j_kj_rg * R_std_jj(end) * der_h_kj_rl  );
+  F = F*M_jj;
+  dF_rl = dF_rl*M_jj;
+  dF_rg = dF_rg*M_jj;
+  d2F = d2F*M_jj;
+  
+  if r>rp
+  	dF_rp = dF_rl;
+  	dF_r = dF_rg;
+  else
+  	dF_rp = dF_rg;
+  	dF_r = dF_rl;
+  end
 
-	dF_rl = n*(rl/rg)^(n-1)/( 1i*kj_rg*rg*(2*n+1) ) ...
-		- R_std_jj(1) * (a(jj-1)/rg)^n * (n+1)/rl*(a(jj-1)/rl)^(n+1) / (1i*kj_rg*(2*n+1)) ...
-		+ R_out_jj(1) * h_kj_aj / j_kj_aj * j_kj_rg * kj * der_j_kj_rl * exp( 1i*kj_aj + imag(-kj_aj+kj_rg+kj_rl) )...
-		- R_out_jj(1) * R_std_jj(1) * h_kj_aj / j_kj_aj * j_kj_rg * j_kj_aj__ * (n+1)/rl*(a(jj-1)/rl)^(n+1) * exp( 1i*kj_aj + abs(imag(-kj_aj+kj_rg+kj_aj__)) );
+elseif ii>jj
 
-	dF_rg = -(n+1)*(rl/rg)^n/( 1i*kj_rg*rg*(2*n+1) ) ...
-		- R_std_jj(1) * (a(jj-1)/rg)^n * (n+1)/rg * (a(jj-1)/rl)^(n+1) / (1i*kj_rg*(2*n+1)) ...
-		+ R_out_jj(1) * h_kj_aj / j_kj_aj * kj * der_j_kj_rg * j_kj_rl * exp( 1i*kj_aj + imag(-kj_aj+kj_rg+kj_rl) )...
-		+ R_out_jj(1) * R_std_jj(1) * h_kj_aj / j_kj_aj * kj * der_j_kj_rg * j_kj_aj__ * (a(jj-1)/rl)^(n+1) * exp( 1i*kj_aj + abs(imag(-kj_aj+kj_rg+kj_aj__)) );
+  [R_out_ii T_out_ii] = multilayer_out(mode,u_out_ii,e_out_ii,a_out_ii,k0,n);
 
-	d2F = -n*(n+1)*(rl/rg)^(n-1)/( 1i*kj_rg*rg^2*(2*n+1) ) ...
-		+ R_std_jj(1) * ( (n+1)/rg )^2 * (a(jj-1)/rg)^n * (a(jj-1)/rl)^(n+1) / ( 1i*kj_rl*(2*n+1) ) ...
-		+ R_out_jj(1) * h_kj_aj / j_kj_aj * kj * der_j_kj_rg * kj * der_j_kj_rl * exp( 1i*kj_aj + imag(-kj_aj+kj_rg+kj_rl) )...
-		- R_out_jj(1) * R_std_jj(1) * h_kj_aj / j_kj_aj * kj * der_j_kj_rg * j_kj_aj__ * (n+1)/rl * (a(jj-1)/rl)^(n+1) * exp( 1i*kj_aj + abs(imag(-kj_aj+kj_rg+kj_aj__)) );
+  %%%%%%%%%% parameters relative to ai and ai__ %%%%%%%%%%%%%%
+  ki = k0*sqrt( u(ii)*e(ii) );
+  ki_ai__ = ki*a(ii-1);
+  ki_ai = ki*a(ii);
+  j_ki_ai = sbesselj(n,ki_ai,'none');
+  h_ki_ai = sbesselh(n,1,ki_ai,'none');
+  h_ki_ai__ = sbesselh(n,1,ki_ai__,'none');
+  
+  %%%%%%%%%% parameters relative to r and rp %%%%%%%%%%%%%%
+  kj_rp = kj*rp;
+  ki_r = ki*r;
 
-elseif abs(kj_rl)<1
-	F = h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		+ R_std_jj(1) * h_kj_rg * j_kj_aj__ * exp( 1i*kj_rg+abs(imag(kj_aj__)) ) * ( a(jj-1)/rl )^(n+1) ...
-		+ R_out_jj(1) * j_kj_rl * h_kj_aj * j_kj_rg / j_kj_aj * exp( 1i*kj_aj+abs(imag(kj_rl+kj_rg-kj_aj)) )...	
-		+ R_out_jj(1) * R_std_jj(1) * j_kj_aj__* h_kj_aj * j_kj_rg / j_kj_aj * exp( 1i*kj_aj+abs(imag(kj_aj__+kj_rg-kj_aj)) ) * ( a(jj-1)/rl )^(n+1) ;
-
-	dF_rl = kj * h_kj_rg * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		- R_std_jj(1) * h_kj_rg * j_kj_aj__ * exp( 1i*kj_rg+abs(imag(kj_aj__)) ) * (n+1)/rl*( a(jj-1)/rl )^(n+1) ...
-		+ kj * R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		- R_out_jj(1) * R_std_jj(1) * j_kj_aj__ * h_kj_aj * j_kj_rg / j_kj_aj * exp( 1i*kj_aj+abs(imag(kj_rg+kj_aj__-kj_aj)) ) * (n+1)/rl*( a(jj-1)/rl )^(n+1) ;
-
-	dF_rg = kj * der_h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		+ kj * der_h_kj_rg * R_std_jj(1) * j_kj_aj__ * exp( 1i*kj_rg+abs(imag(kj_aj__)) ) * ( a(jj-1)/rl )^(n+1) ...
-		+ R_out_jj(1) * h_kj_aj * kj* der_j_kj_rg / j_kj_aj * j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		+ R_out_jj(1) * R_std_jj(1) * j_kj_aj__ * h_kj_aj * kj * der_j_kj_rg / j_kj_aj * exp( 1i*kj_aj+abs(imag(kj_rg+kj_aj__-kj_aj)) ) * ( a(jj-1)/rl )^(n+1) ;
-
-	d2F = kj * der_h_kj_rg * kj * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		- kj * der_h_kj_rg * R_std_jj(1) * j_kj_aj__ * exp( 1i*kj_rg+abs(imag(kj_aj__)) ) * (n+1)/rl * ( a(jj-1)/rl )^(n+1) ...
-		+ R_out_jj(1) * h_kj_aj / j_kj_aj * kj* der_j_kj_rg * kj * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		- R_out_jj(1) * R_std_jj(1) * j_kj_aj__ * h_kj_aj / j_kj_aj * kj * der_j_kj_rg * exp( 1i*kj_aj+abs(imag(kj_rg+kj_aj__-kj_aj)) ) * (n+1)/rl * ( a(jj-1)/rl )^(n+1); 
-
-elseif abs(kj_aj__)<1
-	F = h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		+ R_std_jj(1) * h_kj_rg * j_kj_aj__ * h_kj_rl * exp( 1i*kj_rg+1i*kj_rl+abs(imag(kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) ...
-		+ R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		+ R_out_jj(1) * R_std_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * j_kj_aj__ * h_kj_rl * exp( 1i*kj_aj+1i*kj_rl+abs(imag(kj_rg-kj_aj+kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) ;
-
-	dF_rl = kj * ( h_kj_rg * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ... 
-			+ R_std_jj(1) * h_kj_rg * j_kj_aj__ * der_h_kj_rl * exp( 1i*kj_rg+1i*kj_rl+abs(imag(kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) ...
-			+ R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-			+ R_out_jj(1) * R_std_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * j_kj_aj__ * der_h_kj_rl * exp( 1i*kj_aj+1i*kj_rl+abs(imag(kj_rg-kj_aj+kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) );
-
-	dF_rg = kj * ( der_h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ... 
-			+ der_h_kj_rg * R_std_jj(1) * j_kj_aj__ * h_kj_rl * exp( 1i*kj_rg+1i*kj_rl+abs(imag(kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) ...
-			+ R_out_jj(1) * h_kj_aj * der_j_kj_rg / j_kj_aj * j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-			+ R_out_jj(1) * R_std_jj(1) * h_kj_aj * der_j_kj_rg / j_kj_aj * j_kj_aj__ * h_kj_rl * exp( 1i*kj_aj+1i*kj_rl+abs(imag(kj_rg-kj_aj+kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) );
-
-	d2F = kj^2 * ( der_h_kj_rg * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ... 
-			+ der_h_kj_rg * R_std_jj(1) * j_kj_aj__ * der_h_kj_rl * exp( 1i*kj_rg+1i*kj_rl+abs(imag(kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) ...
-			+ R_out_jj(1) * h_kj_aj / j_kj_aj * der_j_kj_rg * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-			+ R_out_jj(1) * R_std_jj(1) * h_kj_aj / j_kj_aj * der_j_kj_rg * j_kj_aj__ * der_h_kj_rl * exp( 1i*kj_aj+1i*kj_rl+abs(imag(kj_rg-kj_aj+kj_aj__)) + SUM ) * 1i*sqrt(pi) * kj_aj__/gamma(0.5) );
+  j_kj_rp = sbesselj(n,kj_rp,'none');
+  der_j_kj_rp = der_sbesselj(n,kj_rp,'none');
+  h_kj_rp = sbesselh(n,1,kj_rp,'none');
+  der_h_kj_rp = der_sbesselh(n,1,kj_rp,'none');
+  
+  j_ki_r = sbesselj(n,ki_r,'none');
+  der_j_ki_r = der_sbesselj(n,ki_r,'none');
+  h_ki_r = sbesselh(n,1,ki_r,'none');
+  der_h_ki_r = der_sbesselh(n,1,ki_r,'none');
+  
+  %%%%%%%%% calculate Fi  %%%%%%%%%%%%%%%%%
+  Fi = h_ki_r + R_out_ii(1) * j_ki_r ; 
+  dFi_r = ki * (der_h_ki_r + R_out_ii(1) * der_j_ki_r) ; 
+     
+  %%%%%%%%% calculate Fj  %%%%%%%%%%%%%%%%%
+  Fj = j_kj_rp + R_std_jj(end) * h_kj_rp ;
+  dFj_rp = kj * (der_j_kj_rp + R_std_jj(end) * der_h_kj_rp) ;
+  
+  F = Fi*Fj*M_jj*T_out_jj(ii-jj);
+  dF_r = dFi_r*Fj*M_jj*T_out_jj(ii-jj);
+  dF_rp = Fi*dFj_rp*M_jj*T_out_jj(ii-jj);
+  d2F = dFi_r*dFj_rp*M_jj*T_out_jj(ii-jj);
 
 else
-	F = h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ... 
-		 + h_kj_rg * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-		 + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		 + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) );
 
-	dF_rl = kj * ( h_kj_rg * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		       + h_kj_rg * R_std_jj(1) * j_kj_aj__ * der_h_kj_rl / h_kj_aj__ * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-		       + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		       + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * R_std_jj(1) * j_kj_aj__ * der_h_kj_rl / h_kj_aj__ * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) ) );
+  [R_std_ii T_std_ii] = multilayer_std(mode,u_std_ii,e_std_ii,a_std_ii,k0,n);
 
-	dF_rg = kj * ( der_h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		       + der_h_kj_rg * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-		       + R_out_jj(1) * h_kj_aj * der_j_kj_rg / j_kj_aj * j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		       + R_out_jj(1) * h_kj_aj * der_j_kj_rg / j_kj_aj * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) ) );
+  %%%%%%%%%% parameters relative to ai and ai__ %%%%%%%%%%%%%%
+  ki = k0*sqrt( u(ii)*e(ii) );
+  ki_ai__ = ki*a(ii-1);
+  ki_ai = ki*a(ii);
+  j_ki_ai = sbesselj(n,ki_ai,'none');
+  j_ki_ai__ = sbesselj(n,ki_ai__,'none');
+  h_ki_ai__ = sbesselh(n,1,ki_ai__,'none');
 
-	d2F = kj^2 * ( der_h_kj_rg * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-		       + der_h_kj_rg * R_std_jj(1) * j_kj_aj__ / h_kj_aj__ * der_h_kj_rl * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-		       + R_out_jj(1) * h_kj_aj / j_kj_aj * der_j_kj_rg * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-		       + R_out_jj(1) * h_kj_aj / j_kj_aj * der_j_kj_rg * R_std_jj(1) * j_kj_aj__ / h_kj_aj__ * der_h_kj_rl * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) ) );
+  %%%%%%%%%% parameters relative to r and rp %%%%%%%%%%%%%%
+  kj_rp = kj*rp;
+  ki_r = ki*r;
+  
+  j_kj_rp = sbesselj(n,kj_rp,'none');
+  der_j_kj_rp = der_sbesselj(n,kj_rp,'none');
+  h_kj_rp = sbesselh(n,1,kj_rp,'none');
+  der_h_kj_rp = der_sbesselh(n,1,kj_rp,'none');
+  
+  j_ki_r = sbesselj(n,ki_r,'none');
+  der_j_ki_r = der_sbesselj(n,ki_r,'none');
+  h_ki_r = sbesselh(n,1,ki_r,'none');
+  der_h_ki_r = der_sbesselh(n,1,ki_r,'none');
 
-end
-%%%%%%%%%%%%%%%%%%
-%	F = h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ... 
-%		 + h_kj_rg * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-%		 + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-%		 + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) )
-%
-%	dF_rl = kj * ( h_kj_rg * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-%		       + h_kj_rg * R_std_jj(1) * j_kj_aj__ * der_h_kj_rl / h_kj_aj__ * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-%		       + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-%		       + R_out_jj(1) * h_kj_aj * j_kj_rg / j_kj_aj * R_std_jj(1) * j_kj_aj__ * der_h_kj_rl / h_kj_aj__ * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) ) )
-%
-%	dF_rg = kj * ( der_h_kj_rg * j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-%		       + der_h_kj_rg * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-%		       + R_out_jj(1) * h_kj_aj * der_j_kj_rg / j_kj_aj * j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-%		       + R_out_jj(1) * h_kj_aj * der_j_kj_rg / j_kj_aj * R_std_jj(1) * j_kj_aj__ * h_kj_rl / h_kj_aj__ * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) ) )
-%
-%	d2F = kj^2 * ( der_h_kj_rg * der_j_kj_rl * exp( 1i*kj_rg+abs(imag(kj_rl)) ) ...
-%		       + der_h_kj_rg * R_std_jj(1) * j_kj_aj__ / h_kj_aj__ * der_h_kj_rl * exp( 1i*kj_rg+1i*kj_rl-1i*kj_aj__+abs(imag(kj_aj__)) ) ...
-%		       + R_out_jj(1) * h_kj_aj / j_kj_aj * der_j_kj_rg * der_j_kj_rl * exp( 1i*kj_aj+abs(imag(kj_rg-kj_aj+kj_rl)) ) ...
-%		       + R_out_jj(1) * h_kj_aj / j_kj_aj * der_j_kj_rg * R_std_jj(1) * j_kj_aj__ / h_kj_aj__ * der_h_kj_rl * exp( 1i*kj_aj+1i*kj_rl-1i*kj_aj__+abs(imag(kj_rg-kj_aj+kj_aj__)) ) )
-%%%%%%%%%%%%%%%%
-F = F*M_jj;
-dF_rl = dF_rl*M_jj;
-dF_rg = dF_rg*M_jj;
-d2F = d2F*M_jj;
+  %%%%%%%%% calculate Fi  %%%%%%%%%%%%%%%%%
+  Fi = j_ki_r + R_std_ii(end)* h_ki_r ;
+  dFi_r = ki * (der_j_ki_r + R_std_ii(end)* der_h_ki_r) ;
 
-if r>rp
-	dF_rp = dF_rl;
-	dF_r = dF_rg;
-else
-	dF_rp = dF_rg;
-	dF_r = dF_rl;
+  %%%%%%%%% calculate Fj  %%%%%%%%%%%%%%%%%
+  Fj = h_kj_rp + R_out_jj(1) * j_kj_rp ; 
+  dFj_rp = kj * (der_h_kj_rp + R_out_jj(1) * der_j_kj_rp) ; 
+
+  F = Fi*Fj*M_jj*T_std_jj(1+ii-jj+end);
+  dF_r = dFi_r*Fj*M_jj*T_std_jj(1+ii-jj+end);
+  dF_rp = Fi*dFj_rp*M_jj*T_std_jj(1+ii-jj+end);
+  d2F = dFi_r*dFj_rp*M_jj*T_std_jj(1+ii-jj+end);
+     
 end
 
 endfunction
