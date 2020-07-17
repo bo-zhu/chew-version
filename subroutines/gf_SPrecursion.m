@@ -1,25 +1,15 @@
+% the green function of spherically layered media
+% use recurrence formulas to calculate associated Legendre functions
+% written by ZHU Bo at Nanjing University ( bzhu@nju.edu.cn )
 
-clear all
-
-addpath('./subroutines');
-
-%%%%%%%%%%%%%%% input parameters %%%%%%%%%%%%%%
-r_prime = 10;
-theta_prime = pi/2;
-phi_prime = pi/2;
-r = 0.5;
-theta = 0; 
-phi = 0;
-
-a = [0.1 1 11 20]; % the radius of each interface of neighboring shells.
-%e = [2 2 1 8 8]; % relative permittivity.
-%u = [8 8 1 2 2]; % relative permeability.
-e = [1 1 1 1 1]; % relative permittivity.
-u = [1 1 1 1 1]; % relative permeability.
-
-precision = 1e-8;
-cal = 1; % (1) H_r; (2) E_r.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function field_value = gf_SPrecursion(cal,u,e,a,r,theta,phi,r_p,theta_p,phi_p,k0,precision)
+% cal: 1 H_r; 2 E_r
+% u,e : the relative medium parameters of each shell.
+% a : the radius of each interface of neighboring shells.
+% r,theta,phi : the observation point's coordinate. 
+% r_p,theta_p,phi_p : the source point's coordinate. 
+% k0 : vacuum wave number.
+% precision : the precision to stop the iteration.
 
 
 %%%%%%%% physical constants %%%%%%%%%%
@@ -29,29 +19,28 @@ u0 = 4*pi*1e-7;
 
 idx = find(a>r);
 ii = idx(1);
-idx = find(a>r_prime);
+idx = find(a>r_p);
 jj = idx(1);
 
-f = 1/(2*pi*sqrt(e0*u0));
-w = 2*pi*f;
-k0 = w*sqrt(e0*u0);
+w = k0/sqrt(e0*u0);
+f = w/2/pi;
 kj = k0*sqrt(e(jj)*u(jj));
 ki = k0*sqrt(e(ii)*u(ii));
 	
 x = cos(theta);
-x_prime = cos(theta_prime);
-dphi = phi-phi_prime;
+x_p = cos(theta_p);
+dphi = phi-phi_p;
 
 
 n = 1;
 b1 = 1;
 b2 = 2;
 sp_init = sin(theta); % initial value: sp^1_1
-sp_prime_init = sin(theta_prime); % initial value  
+sp_p_init = sin(theta_p); % initial value  
 sp = sp_init;
-sp_prime = sp_prime_init;
+sp_p = sp_p_init;
 sp_old = 0; % sp^2_1
-sp_prime_old = 0;  
+sp_p_old = 0;  
 
 field_value = 0;
 delta = 0;
@@ -63,17 +52,17 @@ case {1} % calculate H_r
   do	
     for m=n:-1:0
       % calculate delta which is a summation over m
-      sp_prime_new = legendre_decrease_m('sch',x_prime,sp_prime,sp_prime_old,n,m); % sp_prime^m-1_n
-      Dsp_prime = sqrt( (n+m)*(n-m+1) ) * sp_prime_new - m*cot(theta_prime)*sp_prime;
-      delta = delta + (1+min(1,m)) * sp * Dsp_prime * cos(m*dphi) ;
-      % update sp and sp_prime for m-1
+      sp_p_new = legendre_decrease_m('sch',x_p,sp_p,sp_p_old,n,m); % sp_p^m-1_n
+      Dsp_p = sqrt( (n+m)*(n-m+1) ) * sp_p_new - m*cot(theta_p)*sp_p;
+      delta = delta + (1+min(1,m)) * sp * Dsp_p * cos(m*dphi) ;
+      % update sp and sp_p for m-1
       sp_new = legendre_decrease_m('sch',x,sp,sp_old,n,m); 
       sp_old = sp;
       sp = sp_new;
-      sp_prime_old = sp_prime;
-      sp_prime = sp_prime_new;
+      sp_p_old = sp_p;
+      sp_p = sp_p_new;
     end
-    [F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_prime,k0,n);
+    [F dF_rp dF_r d2F] = F_tetm('te',u,e,a,r,r_p,k0,n);
     delta = (n+0.5)*F*delta;
     field_value = field_value + delta; % add to total field
     
@@ -85,11 +74,11 @@ case {1} % calculate H_r
       b1 = b1+2;
       b2 = b2+2;
       sp_init = sp_init*sqrt(b1/b2)*sin(theta);
-      sp_prime_init = sp_prime_init*sqrt(b1/b2)*sin(theta_prime);
+      sp_p_init = sp_p_init*sqrt(b1/b2)*sin(theta_p);
       sp = sp_init;
-      sp_prime = sp_prime_init;
+      sp_p = sp_p_init;
       sp_old = 0;
-      sp_old_prime = 0;
+      sp_old_p = 0;
       delta_old = delta; 
       delta = 0;
     end
@@ -101,17 +90,17 @@ case {2} % calculate E_r
   do	
     for m=n:-1:1
       % calculate delta which is a summation over m
-      delta = delta + m*sp*sp_prime*sin(m*dphi) ;
-      % update sp and sp_prime for m-1
+      delta = delta + m*sp*sp_p*sin(m*dphi) ;
+      % update sp and sp_p for m-1
       sp_new = legendre_decrease_m('sch',x,sp,sp_old,n,m); 
       sp_old = sp;
       sp = sp_new;
-      sp_prime_new = legendre_decrease_m('sch',x_prime,sp_prime,sp_prime_old,n,m); 
-      sp_prime_old = sp_prime;
-      sp_prime = sp_prime_new;
+      sp_p_new = legendre_decrease_m('sch',x_p,sp_p,sp_p_old,n,m); 
+      sp_p_old = sp_p;
+      sp_p = sp_p_new;
     end
-    [F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_prime,k0,n);
-    delta = (2*n+1)*(F/r_prime+dF_rp)*delta;
+    [F dF_rp dF_r d2F] = F_tetm('tm',u,e,a,r,r_p,k0,n);
+    delta = (2*n+1)*(F/r_p+dF_rp)*delta;
     field_value = field_value + delta; % add to total field
     
     if ( abs( delta/field_value )<precision && abs( delta_old/field_value )<precision ) % reach the prcision
@@ -122,16 +111,16 @@ case {2} % calculate E_r
       b1 = b1+2;
       b2 = b2+2;
       sp_init = sp_init*sqrt(b1/b2)*sin(theta);
-      sp_prime_init = sp_prime_init*sqrt(b1/b2)*sin(theta_prime);
+      sp_p_init = sp_p_init*sqrt(b1/b2)*sin(theta_p);
       sp = sp_init;
-      sp_prime = sp_prime_init;
+      sp_p = sp_p_init;
       sp_old = 0;
-      sp_old_prime = 0;
+      sp_old_p = 0;
       delta_old = delta; 
       delta = 0;
     end
   until (0)
-  field_value = field_value * -kj/(4*pi*sin(theta_prime)) /(w*e(ii)*e0*r); 
+  field_value = field_value * -kj/(4*pi*sin(theta_p)) /(w*e(ii)*e0*r); 
 
 end
 
