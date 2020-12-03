@@ -50,5 +50,4 @@ j_k2a = sbesselj(ALPHA,k2a,'none');
 %	R_21 = (e1-e2)/(e1*ALPHA/(ALPHA+1)+e2);
 %	T_21 = e1/(e1+e2+e2/ALPHA)*2*(ALPHA+0.5)/ALPHA;
 %end
-
 endfunction	

@@ -1,8 +1,8 @@
-% the green function of spherically layered media
+% the green function of a PHI direction dipole in spherically layered media
 % use Octave's library to calculate associated Legendre functions
 % written by ZHU Bo at Nanjing University ( bzhu@nju.edu.cn )
 
-function field_value = gf(cal,u,e,a,r,theta,phi,r_p,theta_p,phi_p,k0,precision)
+function field_value = gf_phi(cal,u,e,a,r,theta,phi,r_p,theta_p,phi_p,k0,precision)
 % cal: 1 H_r; 2 E_r
 % u,e : the relative medium parameters of each shell.
 % a : the radius of each interface of neighboring shells.

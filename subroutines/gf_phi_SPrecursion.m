@@ -1,8 +1,8 @@
-% the green function of spherically layered media
+% the green function of a PHI direction dipole in spherically layered media
 % use recurrence formulas to calculate associated Legendre functions
 % written by ZHU Bo at Nanjing University ( bzhu@nju.edu.cn )
 
-function field_value = gf_SPrecursion(cal,u,e,a,r,theta,phi,r_p,theta_p,phi_p,k0,precision)
+function field_value = gf_phi_SPrecursion(cal,u,e,a,r,theta,phi,r_p,theta_p,phi_p,k0,precision)
 % cal: 1 H_r; 2 E_r
 % u,e : the relative medium parameters of each shell.
 % a : the radius of each interface of neighboring shells.
@@ -66,7 +66,7 @@ case {1} % calculate H_r
     delta = (n+0.5)*F*delta;
     field_value = field_value + delta; % add to total field
     
-    if ( abs( delta/field_value )<precision && abs( delta_old/field_value )<precision ) % reach the prcision
+    if ( abs( delta/field_value )<precision && abs( delta_old/field_value )<precision ) % reach the precision
       printf('H_r: converged after %d iterations. \n', n);
       break
     else % otherwise, update for n+1 
@@ -78,7 +78,7 @@ case {1} % calculate H_r
       sp = sp_init;
       sp_p = sp_p_init;
       sp_old = 0;
-      sp_old_p = 0;
+      sp_p_old = 0;
       delta_old = delta; 
       delta = 0;
     end
@@ -103,7 +103,7 @@ case {2} % calculate E_r
     delta = (2*n+1)*(F/r_p+dF_rp)*delta;
     field_value = field_value + delta; % add to total field
     
-    if ( abs( delta/field_value )<precision && abs( delta_old/field_value )<precision ) % reach the prcision
+    if ( abs( delta/field_value )<precision && abs( delta_old/field_value )<precision ) % reach the precision
       printf('E_r: converged after %d iterations. \n', n);
       break
     else % otherwise, update for n+1 
@@ -115,7 +115,7 @@ case {2} % calculate E_r
       sp = sp_init;
       sp_p = sp_p_init;
       sp_old = 0;
-      sp_old_p = 0;
+      sp_p_old = 0;
       delta_old = delta; 
       delta = 0;
     end
@@ -123,42 +123,5 @@ case {2} % calculate E_r
   field_value = field_value * -kj/(4*pi*sin(theta_p)) /(w*e(ii)*e0*r); 
 
 end
-
-
-
-%switch cal
-%case {1}
-%	field = 'Hr';
-%case {2}
-%	field = 'Er';
-%endswitch
-%
-%filename = ['data/' field '_10km_' num2str((r-6000e3)/1e3) 'km_' num2str(v) 'mps'];
-%fid = fopen([filename '_w.txt'],'w');
-%fprintf(fid,'%10.5f %10.5f \n', [real(field_value(MM))'; imag(field_value(MM))']);
-%fclose(fid)
-%
-%field_value = interp1(MM,field_value(MM),(1:M_truc)');
-%
-%dt = 0.1*T/M_truc;
-%t = 0:dt:100*dt;
-%len_t = length(t);
-%M = repmat( (1:M_truc)', 1, len_t);
-%t = repmat(t, M_truc, 1);
-%wt = (M*Omeg).*t;
-%
-%field_value_abs = repmat(abs(field_value), 1, len_t);
-%field_value_angle = repmat(angle(field_value), 1, len_t);
-%field_value_t = 2*sum( field_value_abs.*cos(field_value_angle-wt) , 1 );
-%
-%figure(1)
-%plot(t(1,:),field_value_t);
-%xlabel('t (s)');
-%ylabel(field);
-%saveas(1,[filename '_t.pdf']);
-%
-%fid = fopen([filename '_t.txt'],'w');
-%fprintf(fid,'%10.5f %10.5f\n', [t(1,:) ; field_value_t]);
-%fclose(fid)
 
 
